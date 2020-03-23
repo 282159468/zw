@@ -1,0 +1,9 @@
+.vscode
+.DS_Store
+.cache
+package-lock.json
+.docz
+node_modules/
+.history
+.idea/
+dist/

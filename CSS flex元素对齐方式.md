@@ -112,3 +112,35 @@ align-content 生效条件，多个交叉轴，可以理解成有多行，flex �
 </div>
 </Playground>
 
+## justify-content
+
+> justify-content:start|end|center|space-between|space-around|space-evenly|stretch
+
+justify-content 和 align-content 相似，align-content 作用于交叉轴方向的 flex item，jsutify-content 作用于主轴;align-content 需要 flex-wrap:warp
+
+<Playground>
+<div style={{display: 'flex',width: 500, height:200, background: '#eee',justifyContent: 'space-evenly'}}>
+    <div style={{width: 130,height:20, background: '#ccc'}}></div>
+    <div style={{width: 130,height:30, background: '#ccc'}}></div>
+    <div style={{width: 130,height:50, background: '#ccc'}}></div>
+</div>
+</Playground>
+
+## 水平、垂直方向居中
+
+<Playground>
+  不加align-items元素不会在行内居中
+<div style={{display: 'flex',flexWrap: 'wrap',width: 300, height:200, background: '#eee',alignContent:'center',justifyContent:'center'}}>
+    <div style={{width: 70,height:60, background: 'orange'}}></div>
+    <div style={{width: 60,height:50, background: 'blue'}}></div>
+    <div style={{width: 50,height:42, background: 'red'}}></div>
+    <div style={{width: 90,height:20, background: 'yellow'}}></div>
+</div>
+加align-items哪哪都是居中的
+<div style={{display: 'flex',flexWrap: 'wrap',width: 300, height:200, background: '#eee',alignContent:'center',justifyContent:'center',alignItems:'center'}}>
+    <div style={{width: 70,height:60, background: 'orange'}}></div>
+    <div style={{width: 60,height:50, background: 'blue'}}></div>
+    <div style={{width: 50,height:42, background: 'red'}}></div>
+    <div style={{width: 90,height:20, background: 'yellow'}}></div>
+</div>
+</Playground>

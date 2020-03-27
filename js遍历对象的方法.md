@@ -3,89 +3,140 @@ route: /foreach-object
 ---
 
 ```js
-const o = Object.create(
-  { a: 1 },
-  {
-    b: {
-      enumerable: false,
-      value: 2
-    },
-    c: {
-      enumerable: true,
-      value: 3
-    },
-    [Symbol("x")]: {
-      value: 4,
-      enumerable: true
-    }
+const obj = {
+  a: 1,
+  [Symbol("y")]: {
+    value: 8,
+    enumerable: true
   }
-);
-```
+};
+Object.defineProperties(obj, {
+  e: {
+    enumerable: false,
+    value: 2
+  },
+  f: {
+    enumerable: true,
+    value: 3
+  }
+});
+const o = Object.create(obj, {
+  b: {
+    enumerable: false,
+    value: 4
+  },
+  c: {
+    enumerable: true,
+    value: 5
+  },
+  [Symbol("x")]: {
+    value: 6,
+    enumerable: true
+  },
+  [Symbol("z")]: {
+    value: 7,
+    enumerable: true
+  }
+});
 
-## for in
-
-ES6 之前遍历对象多数使用 for in，有以下缺点
-
-- 会遍历原型链上的属性
-- 在遍历数组时，得到数组下标 key 为字符串形式，实现数组下标为数字类型
-- 遍历的顺序在不同浏览器顺序不一
-
-```js
-for (let n in o) {
-  console.log(n); // c、a
+/**
+ * 不包含enumerable:false的属性
+ * 包含原型链的属性，enumerable:false除外
+ * 不包含Symbol
+ *
+ * */
+console.log("for in");
+for (var n in o) {
+  console.log(n, o[n]); // a,f,c
 }
-```
 
-由于 for in 的缺点，ES6 添加了 for of 方法遍历可迭代对象，需要注意一个普通的对象不是可迭代对象，所以 for of 不能遍历对象，除非手动为这个普通对象添加迭代器属性
-
-** for of 不能遍历对象 **
-
-** for in 不会遍历 enumerable:false 属性 **
-
-## Object.keys
-
-自己实践中用的比较多的，返回的 keys 有以下特点
-
-- 不包含原型链上的属性
-- 不包含 Symbol 属性
-- 不包含不可枚举属性
-
-```js
+/**
+ * 不包含enumerable:false的属性
+ * 不包含原型链的属性
+ * 不包含Symbol
+ * */
+console.log("keys");
 Object.keys(o).forEach(key => {
   console.log(key); // c
 });
-```
 
-## Object.getOwnPropertyNames
-
-- 不包含原型链上的属性
-- 不包含 Symbol 属性
-- 包含不可枚举属性
-
-```js
+/**
+ * 包含enumerable:false的属性
+ * 不包含原型链的属性
+ * 不包含Symbol
+ * */
+console.log("getOwnPropertyNames:");
 Object.getOwnPropertyNames(o).forEach(key => {
-  console.log(key); // b、c
+  console.log(key, o[key]); // b,c
+});
+
+/**
+ * 包含enumerable:false的属性
+ * 不包含原型链的属性
+ * 包含Symbol
+ * */
+console.log("getOwnPropertyDescriptors:");
+const descriptors = Object.getOwnPropertyDescriptors(o);
+console.log(descriptors); // b,c,Symbol(x)
+
+/**
+ * 包含enumerable:false的属性
+ * 不包含原型链的Symbol
+ * 只包含Symbol，即使enumerable:false
+ * */
+console.log("getOwnPropertySymbols:");
+const symbols = Object.getOwnPropertySymbols(o).forEach(symbol => {
+  console.log(symbol); // Symbol(x)
+});
+
+/**
+ * 包含enumerable:false的属性
+ * 不包含原型链的属性
+ * 包含Symbol
+ * */
+console.log("ownKeys:");
+const onwKeys = Reflect.ownKeys(o).forEach(key => {
+  console.log("ownKeys", key); // b,c,Symbol(x)
+});
+
+/**
+ * 包含enumerable:false的属性
+ * 不包含原型链的属性
+ * 包含Symbol
+ * */
+console.log("entries:");
+const extries = Object.entries(o);
+const values = Object.values(o);
+extries.forEach(item => {
+  console.log(item); // [c, 5]
+});
+values.forEach(item => {
+  console.log(item); // 5
 });
 ```
 
-## Object.getOwnPropertyDescriptors
+## Object.entries,keys,values
 
-- 不包含原型链上的属性
-- 包含 Symbol 属性
-- 包含不可枚举属性
+这个返回的属性一致，只是值不同。只包含自身 enumerable:true 属性，不包含 Symbol
 
-```js
-Object.getOwnPropertyDescriptors(o).forEach(key => {
-  console.log(key); // b、c、Symbol(x)对应的descriptor
-});
-```
+## for in
 
-## Reflect.ownKeys
+以前遍历对象用的最多就是 for in，不包含 Symbol，缺点会包括原型链上的属性 enumerable:false 除外，所以经常会看到 Object.prototype.hasOwnProperty.call(obj, 'key')处理
 
-Reflect.ownKeys 返回的 key 和 Object.getOwnPropertyDescriptors 返回的描述符对象包含的 key 一样
+> **记住啦 for of 是用来遍历可以迭代对象的，不是遍历对象的**
 
-```js
-Reflect.ownKeys(o).forEach(key => {
-  console.log(key); // b、c、Symbol(x)
-});
-```
+js 数组内置了迭代器，可以 for of 遍历，普通对象除非手动实现迭代器
+
+## getOwnPropertyNames,getOwnPropertyDescriptors,getOwnPropertySymbols
+
+三个 getOwnProperty，以下方法理解记忆
+
+- Names 中文直译，名字-自己的名字-自己的属性，不管 enumberable:false 啥啥的
+- Descriptors 只要是自己的 descriptor，也不管 enumberable:false
+- Symbols 只认 Symbol 不管 enumberable:false
+
+三个方法会包括 enumberable:false
+
+## Reflect.onwKeys
+
+和 getOwnPropertyDescriptors 返回一样

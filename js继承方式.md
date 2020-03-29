@@ -197,4 +197,68 @@ const inst = new SubType("zw");
 
 这种继承方式特点创建实例时 SubType()和 new SubType()效果是一样的
 
+### 缺点
+
+1. 原型链混乱，inst 不是 SubType 的实例，反而是 SuperType 的实例
+
 ## 寄生组合继承
+
+```js
+function SuperType(name) {
+  this.name = name;
+  this.books = ["js", "css"];
+}
+
+SuperType.prototype.sayName = function() {
+  return this.name;
+};
+
+function SubType(name) {
+  SuperType.call(this);
+  this.name = name;
+}
+
+SubType.prototype = new SuperType();
+SubType.prototype.constructor = SubType;
+const inst = new SubType("zw");
+```
+
+上面是组合继承代码，寄生组合只需要修改 SubType.prototype = new SuperType();
+
+```js
+SubType.prototype = Object.create(SuperType.prototype);
+// 或者
+const Fn = function() {};
+Fn.prototype = new SuperType();
+SubType.prototype = new Fn();
+```
+
+完整代码
+
+```js
+function SuperType(name) {
+  this.name = name;
+  this.books = ["js", "css"];
+}
+
+SuperType.prototype.sayName = function() {
+  return this.name;
+};
+
+function SubType(name) {
+  SuperType.call(this);
+  this.name = name;
+}
+
+const Fn = function() {};
+Fn.prototype = new SuperType();
+SubType.prototype = new Fn();
+SubType.prototype.constructor = SubType;
+const inst = new SubType("zw");
+```
+
+通过中间这个 Fn 构造函数解决了组合继承调用两次 SuperType 造成每个实例和 SubType.prototype 上都有重复属性的问题;原型链也正常 inst 同时是 SubType、SuperType 的实例符合预期
+
+## ES6 Class
+
+ES6 CLass 代码通过 babel 编译后还是使用原型链实现继承的，但现代浏览器已开始原生支持 Class

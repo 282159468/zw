@@ -17,7 +17,7 @@ route: /react-object-pool
  * the Class itself, not an instance. If any others are needed, simply add them
  * here, or in their own files.
  */
-var oneArgumentPooler = function (copyFieldsFrom) {
+var oneArgumentPooler = function(copyFieldsFrom) {
   var Klass = this;
   if (Klass.instancePool.length) {
     var instance = Klass.instancePool.pop();
@@ -28,7 +28,7 @@ var oneArgumentPooler = function (copyFieldsFrom) {
   }
 };
 
-var twoArgumentPooler = function (a1, a2) {
+var twoArgumentPooler = function(a1, a2) {
   var Klass = this;
   if (Klass.instancePool.length) {
     var instance = Klass.instancePool.pop();
@@ -39,7 +39,7 @@ var twoArgumentPooler = function (a1, a2) {
   }
 };
 
-var threeArgumentPooler = function (a1, a2, a3) {
+var threeArgumentPooler = function(a1, a2, a3) {
   var Klass = this;
   if (Klass.instancePool.length) {
     var instance = Klass.instancePool.pop();
@@ -50,7 +50,7 @@ var threeArgumentPooler = function (a1, a2, a3) {
   }
 };
 
-var fourArgumentPooler = function (a1, a2, a3, a4) {
+var fourArgumentPooler = function(a1, a2, a3, a4) {
   var Klass = this;
   if (Klass.instancePool.length) {
     var instance = Klass.instancePool.pop();
@@ -61,7 +61,7 @@ var fourArgumentPooler = function (a1, a2, a3, a4) {
   }
 };
 
-var standardReleaser = function (instance) {
+var standardReleaser = function(instance) {
   var Klass = this;
   !(instance instanceof Klass)
     ? process.env.NODE_ENV !== "production"
@@ -89,7 +89,7 @@ var DEFAULT_POOLER = oneArgumentPooler;
  * @param {Function} CopyConstructor Constructor that can be used to reset.
  * @param {Function} pooler Customizable pooler.
  */
-var addPoolingTo = function (CopyConstructor, pooler) {
+var addPoolingTo = function(CopyConstructor, pooler) {
   // Casting as any so that flow ignores the actual implementation and trusts
   // it to match the type we declared
   var NewKlass = CopyConstructor;
@@ -138,7 +138,7 @@ var inst = FnWithPool.getPooled("zw");
 因为 var FnWithPool = addPoolingTo(Fn)没有添加第二个参数，所以 getPooled 为 oneArgumentPooler
 
 ```js
-var oneArgumentPooler = function (copyFieldsFrom) {
+var oneArgumentPooler = function(copyFieldsFrom) {
   // 这里的this指向FnWithPool
   var Klass = this;
   // FnWithPool.instancePool在addPoolingTo初始化为[]，即池子里没有实例
@@ -163,7 +163,7 @@ FnWithPool.release(inst);
 ```
 
 ```js
-var standardReleaser = function (instance) {
+var standardReleaser = function(instance) {
   var Klass = this;
   instance.destructor();
   if (Klass.instancePool.length < Klass.poolSize) {
@@ -179,7 +179,7 @@ var standardReleaser = function (instance) {
 function Fn(name) {
   this.name = name;
 }
-Fn.prototype.destructor = function () {
+Fn.prototype.destructor = function() {
   // 清理工作，释放内存，实例上可能存在引用类型的值[],{}
   this.name = undefined;
 };
@@ -188,7 +188,7 @@ Fn.prototype.destructor = function () {
 当再次使用时 var inst2 = FnWithPool.getPooled("zw2");
 
 ```js
-var oneArgumentPooler = function (copyFieldsFrom) {
+var oneArgumentPooler = function(copyFieldsFrom) {
   var Klass = this;
   // FnWithPool.instancePool就不是空的了，因为上面release时存入了一个清理后的实例
   if (Klass.instancePool.length) {
@@ -205,3 +205,61 @@ var oneArgumentPooler = function (copyFieldsFrom) {
 - [ ] 再次获取实例时，同样执行了构造函数，既然这样那对象池为什么能优化性能
 
 ## React@16 对象池
+
+16 没有把对象池再单独抽成一个文件，而是由具体的模块重复实现，比如事件
+
+SyntheticEvent.js
+
+```js
+const EVENT_POOL_SIZE = 10;
+function SyntheticEvent(
+  dispatchConfig,
+  targetInst,
+  nativeEvent,
+  nativeEventTarget
+) {
+  //...
+}
+function releasePooledEvent(event) {
+  const EventConstructor = this;
+  invariant(
+    event instanceof EventConstructor,
+    "Trying to release an event instance into a pool of a different type."
+  );
+  event.destructor();
+  if (EventConstructor.eventPool.length < EVENT_POOL_SIZE) {
+    EventConstructor.eventPool.push(event);
+  }
+}
+
+function addEventPoolingTo(EventConstructor) {
+  EventConstructor.eventPool = [];
+  EventConstructor.getPooled = getPooledEvent;
+  EventConstructor.release = releasePooledEvent;
+}
+
+addEventPoolingTo(SyntheticEvent);
+
+function getPooledEvent(dispatchConfig, targetInst, nativeEvent, nativeInst) {
+  const EventConstructor = this;
+  if (EventConstructor.eventPool.length) {
+    const instance = EventConstructor.eventPool.pop();
+    EventConstructor.call(
+      instance,
+      dispatchConfig,
+      targetInst,
+      nativeEvent,
+      nativeInst
+    );
+    return instance;
+  }
+  return new EventConstructor(
+    dispatchConfig,
+    targetInst,
+    nativeEvent,
+    nativeInst
+  );
+}
+```
+
+- [ ] React@16 为什么会删除 PooledClass.js 文件改为具体对象单独实现对象池

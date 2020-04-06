@@ -113,7 +113,7 @@ function foo(cb) {
   ret.a = null;
 }
 
-foo(function(data) {
+foo(function (data) {
   console.log(data.a.b, data); // 2,{a: {…}}
   setTimeout(() => {
     console.log(data); // {a:null}
@@ -125,9 +125,9 @@ foo(function(data) {
 
 ```jsx
 <div
-  onClick={e => {
+  onClick={(e) => {
     console.log(e);
-    setTimeout(function() {
+    setTimeout(function () {
       console.log(e);
     });
   }}
@@ -135,3 +135,5 @@ foo(function(data) {
   Button
 </div>
 ```
+
+## V8 垃圾回收 // TODO

@@ -263,3 +263,17 @@ function getPooledEvent(dispatchConfig, targetInst, nativeEvent, nativeInst) {
 ```
 
 - [ ] React@16 为什么会删除 PooledClass.js 文件改为具体对象单独实现对象池
+
+
+google why React@16 delete PooledClass.js
+https://github.com/facebook/react/issues/9325
+
+https://github.com/facebook/react/pull/7814
+
+https://github.com/facebook/react/pull/7814/commits/fdce7ca449c353e100a813b80de614771eb68c33
+
+https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Functions/arguments
+
+https://div.io/topic/1269
+
+https://github.com/petkaantonov/bluebird/wiki/Optimization-killers#3-managing-arguments

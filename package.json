@@ -19,5 +19,9 @@
   "homepage": "https://github.com/282159468/zw#readme",
   "dependencies": {
     "father": "^2.29.2"
+  },
+  "devDependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.17.1"
   }
 }

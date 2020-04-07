@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <h1>test CORS</h1>
+    <script>
+      var xhr = new XMLHttpRequest();
+      xhr.open("POST", "http://localhost:3002/cors");
+    //   xhr.setRequestHeader("X-Custom-Header", "value");
+      xhr.setRequestHeader("Content-Type", "application/json");
+      xhr.send(JSON.stringify({ a: 2 }));
+    </script>
+  </body>
+</html>

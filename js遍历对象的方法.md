@@ -7,36 +7,36 @@ const obj = {
   a: 1,
   [Symbol("y")]: {
     value: 8,
-    enumerable: true
-  }
+    enumerable: true,
+  },
 };
 Object.defineProperties(obj, {
   e: {
     enumerable: false,
-    value: 2
+    value: 2,
   },
   f: {
     enumerable: true,
-    value: 3
-  }
+    value: 3,
+  },
 });
 const o = Object.create(obj, {
   b: {
     enumerable: false,
-    value: 4
+    value: 4,
   },
   c: {
     enumerable: true,
-    value: 5
+    value: 5,
   },
   [Symbol("x")]: {
     value: 6,
-    enumerable: true
+    enumerable: true,
   },
   [Symbol("z")]: {
     value: 7,
-    enumerable: true
-  }
+    enumerable: true,
+  },
 });
 
 /**
@@ -56,7 +56,7 @@ for (var n in o) {
  * 不包含Symbol
  * */
 console.log("keys");
-Object.keys(o).forEach(key => {
+Object.keys(o).forEach((key) => {
   console.log(key); // c
 });
 
@@ -66,7 +66,7 @@ Object.keys(o).forEach(key => {
  * 不包含Symbol
  * */
 console.log("getOwnPropertyNames:");
-Object.getOwnPropertyNames(o).forEach(key => {
+Object.getOwnPropertyNames(o).forEach((key) => {
   console.log(key, o[key]); // b,c
 });
 
@@ -85,7 +85,7 @@ console.log(descriptors); // b,c,Symbol(x)
  * 只包含Symbol，即使enumerable:false
  * */
 console.log("getOwnPropertySymbols:");
-const symbols = Object.getOwnPropertySymbols(o).forEach(symbol => {
+const symbols = Object.getOwnPropertySymbols(o).forEach((symbol) => {
   console.log(symbol); // Symbol(x)
 });
 
@@ -95,7 +95,7 @@ const symbols = Object.getOwnPropertySymbols(o).forEach(symbol => {
  * 包含Symbol
  * */
 console.log("ownKeys:");
-const onwKeys = Reflect.ownKeys(o).forEach(key => {
+const onwKeys = Reflect.ownKeys(o).forEach((key) => {
   console.log("ownKeys", key); // b,c,Symbol(x)
 });
 
@@ -107,10 +107,10 @@ const onwKeys = Reflect.ownKeys(o).forEach(key => {
 console.log("entries:");
 const extries = Object.entries(o);
 const values = Object.values(o);
-extries.forEach(item => {
+extries.forEach((item) => {
   console.log(item); // [c, 5]
 });
-values.forEach(item => {
+values.forEach((item) => {
   console.log(item); // 5
 });
 ```
@@ -129,14 +129,14 @@ js 数组内置了迭代器，可以 for of 遍历，普通对象除非手动实
 
 ## getOwnPropertyNames,getOwnPropertyDescriptors,getOwnPropertySymbols
 
-三个 getOwnProperty，以下方法理解记忆
+三个 `getOwnProperty`关键点为`Own`，只要是自己属性不管`enumberable:false`也会返回，同理原型链上的都不包含
 
-- Names 中文直译，名字-自己的名字-自己的属性，不管 enumberable:false 啥啥的
-- Descriptors 只要是自己的 descriptor，也不管 enumberable:false
-- Symbols 只认 Symbol 不管 enumberable:false
+- Names 不包括 Symbol 属性
+- Descriptors 只要是自己的 descriptor，包括 Symbol 属性
+- Symbols 只包括 Symbol 属性
 
 三个方法会包括 enumberable:false
 
-## Reflect.onwKeys
+## Reflect.ownKeys
 
-和 getOwnPropertyDescriptors 返回一样
+和 getOwnPropertyDescriptors 返回属性数量一样

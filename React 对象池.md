@@ -264,16 +264,43 @@ function getPooledEvent(dispatchConfig, targetInst, nativeEvent, nativeInst) {
 
 - [ ] React@16 为什么会删除 PooledClass.js 文件改为具体对象单独实现对象池
 
-
-google why React@16 delete PooledClass.js
+google 搜索 why React@16 delete PooledClass.js 发现了这个 issue
 https://github.com/facebook/react/issues/9325
+同时还回答了另外一个问题，对象池代码里定义了 oneArgumentPooler,tow,three,four 四个获取对象的方法，他们唯一区别就是参数不一样。
 
+```js
+var PooledClass = {
+  addPoolingTo: addPoolingTo,
+  oneArgumentPooler: oneArgumentPooler,
+  twoArgumentPooler: twoArgumentPooler,
+  threeArgumentPooler: threeArgumentPooler,
+  fourArgumentPooler: fourArgumentPooler,
+};
+```
+
+当时自己和提这个 issue 的哥们想法一样完全可以写一个通用的。而且还有相关的 PR
 https://github.com/facebook/react/pull/7814
+看了回答才明白为什么这样做
 
-https://github.com/facebook/react/pull/7814/commits/fdce7ca449c353e100a813b80de614771eb68c33
+- 祖传代码避免风险一直保留着
+- 出于性能考虑不使用`arguments` 也就不同个数参数写一个函数
+  文件头部有段注释之前一直没有注意
+
+  > A completely generic pooler is easy to implement, but would require accessing the `arguments` object
+
+意思就是一个通用的处理函数很容易实施，但是需要使用 `arguments` （估计祖传代码时还没有...args）
+然后为啥是用 arguments 不就这样搞了。dan 神回复
+
+> The person who wrote this code several years ago was likely worried about JS engine deoptimizations caused by using arguments
+
+我又迷了`arguments`会影响性能，之前有印象`with`,`evel`会影响 JS 引擎对代码优化，结果一路查才知道有个`Optimization-killers`
 
 https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Functions/arguments
-
 https://div.io/topic/1269
-
 https://github.com/petkaantonov/bluebird/wiki/Optimization-killers#3-managing-arguments
+
+大概包括下面几种情况让函数无法被优化
+- with eval 这两个意料中的
+- 包含 debugger
+- arguments 使用不当
+- `__proto__`,`get`,`set`

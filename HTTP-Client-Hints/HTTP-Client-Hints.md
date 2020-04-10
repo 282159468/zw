@@ -1,0 +1,3 @@
+---
+route: /http-client-hints
+---

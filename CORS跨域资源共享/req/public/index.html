@@ -26,7 +26,37 @@
         });
       }
 
-      disable();
+      function customHeaders() {
+        var xhr = new XMLHttpRequest();
+        xhr.open("POST", "http://localhost:3002/cors-getResponseHeader");
+        xhr.setRequestHeader("User-Name", "zw");
+        xhr.setRequestHeader("User-age", 35);
+        xhr.send();
+        xhr.addEventListener("load", function() {
+          console.log(xhr.responseText, xhr.getAllResponseHeaders());
+        });
+      } 
+ 
+      function withCredentials() {
+        var xhr = new XMLHttpRequest();
+        xhr.open("POST", "http://localhost:3002/cors-all-origin");
+        xhr.withCredentials = true;
+        xhr.send();
+        xhr.addEventListener("load", function() {
+          console.log(xhr.responseText, xhr.getAllResponseHeaders());
+        });
+      }
+
+      function simpleRequest() {
+        var xhr = new XMLHttpRequest();
+        xhr.open("POST", "http://localhost:3002/cors-simple-request");
+        xhr.send();
+        xhr.addEventListener("load", function() {
+          console.log(xhr.responseText);
+        });
+      }
+
+      simpleRequest();
     </script>
   </body>
 </html>

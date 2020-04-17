@@ -10,6 +10,7 @@ route: /you-do-not-know-JavaScript-medium-promise
 
 `Promise`主要解决回调异步编程的信任问题
 
+- 回调地狱
 - 回调时机不确定，任务可能是异步的也可能是同步的
 
 ```js
@@ -20,10 +21,8 @@ function(num, cb){
 ```
 
 - 回调不确定，有可能传入的回调永远不会执行，而`Promise`的回调会在下一个`tick`触发
-
 - 回调参数和`this`上下文不可信，cb.call(obj, a, b, ...)，`Promise`不管是`resolve`、`reject`传入参数都是一个，`this`为全局对象`window`
-
-* 吞掉异常和错误
+- 吞掉异常和错误
 
 下面的`foo`可能是同事编写的函数，也可能是第三方提供的，`b.a();`导致异常后回调`cb`根本不会执行，外部也捕获不到异常
 
@@ -211,23 +210,94 @@ request("http://zw.com/age")
 
 ### 默认的异常 hanlder
 
-### 纠结的 catch 循环
+如果异常没有被处理，会一直传递下去直到 catch 或者 onRejected
+
+```js
+var p = new Promise((resolve, reject) => reject("出错啦！"));
+p.then(
+  // 只定义了完成处理函数
+  () => console.log("Fulfilled"),
+  // 没有定义onRejected，但有类似这样的默认异常处理函数
+  (err) => {
+    throw new Error(err + 2);
+  }
+)
+  .then(function(v) {
+    return v * 2;
+  })
+  // 即使前一个then也没处理异常，这里还是能捕获到
+  .catch((err) => console.log("处理异常", err));
+```
+
+如果不显示声明 onFulfilled 函数，其行为和 onRejected 类似
+
+### 无止尽的 catch
+
+不管是 then 的 onRejected 还是 catch 函数自身都有可能出现异常，要处理这部分异常是无止尽的
+
+```js
+var p = new Promise((resolve, reject) => reject("出错啦！"));
+p.then().catch((err) => {
+  a.b();
+  console.log("处理异常", err);
+});
+```
+
+catch 本来是为了捕获 reject 拒绝信息的，但自身又出现异常，而要捕获这部分异常需要在后面添加.catch()，解决方法
+
+- queryObjects
+- 自定义实现 defer
 
 ### 全局捕获
 
-### done
-
-### queryObjects
-
 ### 构造异常
 
-## 默认的完成 hanlder
+new Promise(fn)参数 fn 函数内部的异常是可以被捕获的，但传递错误的参数不能捕获，可以为创建 promise 都失败了何来的 catch 和 then
+
+```js
+var p = new Promise((resolve, reject) => {
+  a.b();
+}).catch((err) => console.log(err));
+```
+
+```js
+var p = new Promise([]).catch((err) => console.log(err));
+```
 
 ## promise 链
 
+then 和 catch 处理函数的返回值如果是 promise，在后续回调中接收的值不是该 promise，而该 promise 决议后的值
+
+```js
+var p = new Promise((resolve, reject) => {
+  reject(1);
+})
+  .catch((err) => Promise.reject(2))
+  .catch((err) => {
+    // 输出2
+    console.log(err);
+    return 3;
+  })
+  .then((v) => {
+    // 输出3，上一步的catch重置了当前promise链为完成状态
+    // 第一catch没有“重置”是因为返回了新promise改变了当前promise,其实他重置的promise对象是p
+    console.log(v);
+    return Promise.resolve(4);
+  });
+```
+
 ## resolve 和 reject
 
-## Promise.all([])和 Promise.race([])
+- 两者可以传入 promise
+- resolve 表示**决议**，即返回的结果可能是完成也可以是拒绝，而 reject 是定是拒绝
+
+```js
+Promise.resolve(Promise.reject()); // 拒绝
+Promise.resolve(); // 完成
+Promise.reject(Promise.resolve()); // 拒绝
+```
+
+## Promise.all([]) / Promise.race([]) / Promise.allSettled
 
 ### resolve 化
 

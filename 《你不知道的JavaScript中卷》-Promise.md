@@ -11,7 +11,7 @@ route: /you-do-not-know-JavaScript-medium-promise
 `Promise`主要解决回调异步编程的信任问题
 
 - 回调地狱
-- 回调时机不确定，任务可能是异步的也可能是同步的
+- 回调时机不确定，传入回调的函数可能同步或者异步调用回调
 
 ```js
 foo(1, function(){});
@@ -68,14 +68,22 @@ function foo(num, cb) {
 
 ## thenable 对象
 
-鸭式辨型,具有`then`方法的对象
+鸭式辨型,具有`then`方法的对象，thenable 对象
 
 ```js
 var obj = {
-  then: (cb) => cb(2),
+  then: (cb, fail) => cb(2),
 };
 // 输出2
 Promise.resolve(obj).then((data) => console.log(data));
+
+var obj = {
+  then: (cb, fail) => fail(3),
+};
+// 并不会执行catch
+Promise.reject(obj).catch((err) => console.log("reject", err));
+// 输出resolve 3
+Promise.resolve(obj).catch((err) => console.log("resolve", err));
 ```
 
 ## Promise.resolve()
@@ -297,17 +305,229 @@ Promise.resolve(); // 完成
 Promise.reject(Promise.resolve()); // 拒绝
 ```
 
-## Promise.all([]) / Promise.race([]) / Promise.allSettled
+## Promise.all(iterable) / Promise.race(iterable) / Promise.allSettled(iterable)
 
-### resolve 化
+### 相同点
 
-### 特殊参数
+- 传入参数都可迭代对象如数组，或者是立即值
+- 把传入每个成员通过 Promise.resolve()转化为真正的 promise 对象
 
-- 立即值
-- 空数组
+### all
 
-## finally
+当所有 promise 决议了，如果所有决议是完成的，最后返回状态为完成的 promise；如果任一 promise 决议为失败，最终返回的 promise 状态为失败。
+
+all 的问题是有 promise 失败时，获取不到另外状态为完成的 promise 值
+
+```js
+var thenable = {
+  then: (onFulfilled, onRejcted) => {
+    console.log("thenable");
+    onFulfilled(1);
+  },
+};
+var p2 = new Promise((resolve, reject) => {
+  console.log("p2");
+  reject(2);
+});
+var p3 = new Promise((resolve) => {
+  console.log("p3");
+  setTimeout(() => resolve(3));
+});
+Promise.all([thenable, p2, p3])
+  .then((data) => console.log("data", data))
+  .catch((err) => console.log("err", err));
+```
+
+### race
+
+和 all 类似，任一 promise 对象决议，返回 promise 状态为该 promise 决议状态
+
+```js
+var p1 = new Promise((resolve, reject) => {
+  console.log("p1");
+  reject(1);
+});
+var p3 = new Promise((resolve) => {
+  console.log("p2");
+  setTimeout(() => resolve(2));
+});
+Promise.all([p1, p2])
+  .then((data) => console.log("data", data))
+  .catch((err) => console.log("err", err));
+```
+
+### allSettled
+
+allSettled 返回的 promise 决议状态是稳定的(settled)完成状态，不管传入迭代对象的 promise 成员决议是否为拒绝都不会影响返回的 promise 的完成状态
+
+对每个决议结果进行封装{status: 'fulfilled', value}或者{status: 'rejected', reason}
+
+```js
+var thenable = {
+  then: (onFulfilled, onRejcted) => {
+    console.log("thenable");
+    throw new Error(111);
+  },
+};
+var p2 = new Promise((resolve, reject) => {
+  console.log("p2");
+  reject(2);
+});
+var p3 = new Promise((resolve) => {
+  console.log("p3");
+  setTimeout(() => resolve(3));
+});
+Promise.allSettled([thenable, p2, p3])
+  .then((data) => console.log("data", data))
+  .catch((err) => console.log("err", err));
+```
+
+输出 data 结果为：
+
+```json
+[
+  {
+    "status": "rejected",
+    "reason": {}
+  },
+  {
+    "status": "rejected",
+    "reason": 2
+  },
+  {
+    "status": "fulfilled",
+    "value": 3
+  }
+]
+```
+
+尽管 thenable 和 p1 的决议为拒绝，但最终都会进入 then 而不 catch，与 all 的区别是 allSettled 就算有 promise 失败也能获取到所有 promise 的结果
+
+## Promise.finally()
+
+当 promise 决议后不管完成还是拒绝都会调用 finally 函数，finally 会自动用上层 promise 的结果 resolve 或者 reject 给下层，如果 finally 函数内容有异常会以该异常 reject
+
+```js
+this.setState({ loading: true });
+request("zw.com").finally(() => {
+  this.setState({ loading: false });
+});
+```
+
+```js
+Promise.reslove(1)
+  .finally(() => 2)
+  .then((n) => console.log(n));
+```
+
+```js
+Promise.reject(1)
+  .finally(() => 2)
+  .catch((n) => console.log(n));
+```
+
+```js
+Promise.reject(1)
+  .finally(() => a.b())
+  .catch((n) => console.log(n));
+```
 
 ## Promise 和事件循环
 
 - [ ] 用`all`, `race`实现`none`,`any`,`first`,`last`,`map`
+
+## 练习
+
+```js
+async function async1() {
+  console.log("1");
+  await async2();
+  console.log("2");
+  await async3();
+}
+async function async2() {
+  console.log("3");
+}
+async function async3() {
+  console.log("4");
+}
+// 开始执行
+console.log("5");
+setTimeout(function() {
+  console.log("6");
+}, 0);
+async1();
+new Promise(function(resolve) {
+  console.log("7");
+  resolve();
+}).then(function() {
+  console.log("8");
+});
+console.log("9");
+```
+
+```js
+new Promise((resolve, reject) => {
+  console.log("1");
+  resolve();
+})
+  .then(() => {
+    console.log("2");
+    new Promise((resolve, reject) => {
+      console.log("3");
+      resolve();
+    })
+      .then(() => {
+        console.log("4");
+      })
+      .then(() => {
+        console.log("5");
+      })
+      .then(() => {
+        console.log("6");
+      })
+      .then(() => {
+        console.log("7");
+      })
+      .then(() => {
+        console.log("8");
+      })
+      .then(() => {
+        console.log("9");
+      });
+    return new Promise((resolve, reject) => {
+      resolve();
+    })
+      .then(() => {
+        console.log("11");
+      })
+      .then(() => {
+        console.log("12");
+      });
+  })
+  .then(() => {
+    console.log("13");
+  });
+```
+
+```js
+new Promise((resolve) => {
+  resolve();
+  Promise.resolve().then(() => console.log(2));
+}).then(() => console.log(4));
+```
+
+```js
+new Promise((resolve) => {
+  resolve();
+  Promise.resolve({
+    then: function(resolve, reject) {
+      console.log(1);
+      resolve();
+    },
+  }).then(() => console.log(2));
+  console.log(0);
+}).then(() => console.log(3));
+```
+
+- [ ] 嵌套 promise then 推入 microTasks 的顺序是自己理解的，没有从 ECMA 规范中证实

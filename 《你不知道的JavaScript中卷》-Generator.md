@@ -47,7 +47,65 @@ iteraor.next(5); // {value:8, done: false}
 
 ## 迭代器
 
-手动定义数组迭代器
+迭代器鸭工辨型
+
+- 迭代器是一个对象
+- 该对象提供 next 方法，每执行一次 next 方法会返回数据
+- 该数据是一个对象包含包含 value、done 两个值，像这样{value: 1, done: false}
+- 当返回数据中 done 为 true 时，再次执行 next 方法返回的数据应该都是{value: undefined, done: true}
+
+生成器返回的就是迭代器，并且是可迭代对象，可迭代对象需要对象包含[Symbol.iterator]方法，这个方法返回值就是迭代器，所以 Symbol.iterator 可以是一个生成器
+
+for...of 可以遍历可迭代对象，比如 Array、Map，但是不能遍历普通对象，如下
+
+```js
+var o = { a: 1, b: 2, c: 4 };
+
+// Uncaught TypeError: o is not iterable
+for (var [key, val] of o) {
+  console.log(`${key} = ${val}`);
+}
+```
+
+但是可以手动为普通对象添加迭代器
+
+```js
+var o = {
+  a: 1,
+  b: 2,
+  c: 4,
+  *[Symbol.iterator]() {
+    var keys = Object.keys(this);
+    for (var key of keys) {
+      yield [key, this[key]];
+    }
+  },
+};
+for (var [key, val] of o) {
+  console.log(`${key} = ${val}`);
+}
+console.log([...o]);
+```
+
+平时使用 Array、Map 时并没有实现迭代器也可以用 for...of 遍历是因为继承了 Array.prototype 中 Symbol.iterator 定义的迭代器，所以可以手动改写数组的迭代行为
+
+```js
+// 手动定义数组迭代器
+Object.defineProperty(Array.prototype, Symbol.iterator, {
+  value: function*() {
+    for (var i = 0; i < this.length; i++) {
+      yield `${i}:${this[i]}`;
+    }
+  },
+});
+
+for (var item of [1, 2, 5]) {
+  console.log(item);
+}
+// 0:1
+// 1:2
+// 2:5
+```
 
 ### 停止生成器
 
@@ -78,3 +136,7 @@ iteraor.next(5); // {value:8, done: false}
 ## thunk
 
 ## 实现生成器
+
+```
+
+```

@@ -47,14 +47,14 @@ iteraor.next(5); // {value:8, done: false}
 
 ## 迭代器
 
-迭代器鸭工辨型
+迭代器鸭式辨型
 
 - 迭代器是一个对象
 - 该对象提供 next 方法，每执行一次 next 方法会返回数据
-- 该数据是一个对象包含包含 value、done 两个值，像这样{value: 1, done: false}
+- 该数据是一个对象包含 value、done 两个值，像这样{value: 1, done: false}
 - 当返回数据中 done 为 true 时，再次执行 next 方法返回的数据应该都是{value: undefined, done: true}
 
-生成器返回的就是迭代器，并且是可迭代对象，可迭代对象需要对象包含[Symbol.iterator]方法，这个方法返回值就是迭代器，所以 Symbol.iterator 可以是一个生成器
+执行生成器返回的就是迭代器，并且是可迭代对象，可迭代对象需要对象包含[Symbol.iterator]方法，这个方法返回值就是迭代器，所以 Symbol.iterator 可以是一个生成器
 
 for...of 可以遍历可迭代对象，比如 Array、Map，但是不能遍历普通对象，如下
 

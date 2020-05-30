@@ -80,7 +80,7 @@ function foo() {
 
 ```js
 function foo() {
-  const element = document.getElementById("id");
+  const element = document.getElementById('id');
   element.onclick = function handler() {
     console.log(element.width);
   };
@@ -97,7 +97,7 @@ function foo() {
 ```js
 const data = new WeakMap();
 let obj = { a: 2 };
-data.set(obj, "x");
+data.set(obj, 'x');
 console.log(data.get(obj)); // x
 obj = null;
 // obj这个key没有被其他变量引用时自动就被回收了
@@ -113,7 +113,7 @@ function foo(cb) {
   ret.a = null;
 }
 
-foo(function (data) {
+foo(function(data) {
   console.log(data.a.b, data); // 2,{a: {…}}
   setTimeout(() => {
     console.log(data); // {a:null}
@@ -124,16 +124,19 @@ foo(function (data) {
 第一个 console 输出`// 2,{a: {…}}`，点击{…}结果还是{a:null}，这里的效果跟 React 的事件处理函数中的 EVENT 对象很似，只不过 React 使用的是更高端的“对象池”来管理的
 
 ```jsx
-<div
-  onClick={(e) => {
-    console.log(e);
-    setTimeout(function () {
+import React from 'react';
+export default () => (
+  <div
+    onClick={e => {
       console.log(e);
-    });
-  }}
->
-  Button
-</div>
+      setTimeout(function() {
+        console.log(e);
+      });
+    }}
+  >
+    Button
+  </div>
+);
 ```
 
 ## V8 垃圾回收 // TODO

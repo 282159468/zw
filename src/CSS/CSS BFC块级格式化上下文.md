@@ -2,8 +2,6 @@
 route: /css-bfc
 ---
 
-import { Playground } from 'docz'
-
 ## BFC 定义
 
 块级格式化上下文 Block Format Context，创建环境=>制约渲染=>不会影响
@@ -34,51 +32,44 @@ BFC 内的元素布局规则
 
 ### 清除浮动影响
 
-<Playground>
+<div>
 浮动元素造成高度消失
 <div style={{border:`solid blue`}}>
     <div style={{width: 130,height:20, float:'left', background: '#ccc',}}></div>
 </div>
-</Playground>
+</div>
 
-<Playground>
+<div>
 利用“BFC 内的浮动元素也会参与高度计算”，触发BFC问题解决
 <div style={{border:`solid blue`, overflow:'hidden'}}>
     <div style={{width: 130,height:20, float:'left', background: '#ccc',}}></div>
 </div>
-</Playground>
+</div>
 
 ### 两列自适应布局
 
-<Playground>
 浮动导致两个元素重叠现象
+
 <div style={{border:`solid blue`, width:200,}}>
     <div style={{width: 130,height:20, float:'left', background: 'red',}}></div>
     <div style={{background:'rgba(0,0,0,.3)'}}>很早就听说过这句话了：一件事情，如果你坚持22天以上，就变成了习惯。</div>
 </div>
-</Playground>
 
-<Playground>
 <div style={{border:`solid blue`, width:200, overflow:'hidden'}}>
     <div style={{width: 130,height:20, float:'left', background: 'red',}}></div>
     <div style={{overflow:'hidden',background:'rgba(0,0,0,.3)'}}>利用“BFC 内的浮动元素不会与其他元素重叠”</div>
 </div>
-</Playground>
 
 ### margin 重叠
 
-<Playground>
 <div style={{border:`solid blue`, width:200, overflow:'hidden'}}>
     <div style={{width: 130,height:20, margin:20, background: '#ccc'}}></div>
     <div style={{width: 130,height:20, margin:20, background: '#ccc'}}></div>
     <div style={{width: 130,height:20, margin:20, background: '#ccc'}}></div>
 </div>
-</Playground>
 
-<Playground>
 <div style={{border:`solid blue`, width:200, overflow:'hidden'}}>
     <div style={{width: 130,height:20, margin:20, background: '#ccc', float: 'left'}}></div>
     <div style={{width: 130,height:20, margin:20, background: '#ccc', float: 'left'}}></div>
     <div style={{width: 130,height:20, margin:20, background: '#ccc', float: 'left'}}></div>
 </div>
-</Playground>

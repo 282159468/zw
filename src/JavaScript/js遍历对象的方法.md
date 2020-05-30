@@ -5,7 +5,7 @@ route: /foreach-object
 ```js
 const obj = {
   a: 1,
-  [Symbol("y")]: {
+  [Symbol('y')]: {
     value: 8,
     enumerable: true,
   },
@@ -29,11 +29,11 @@ const o = Object.create(obj, {
     enumerable: true,
     value: 5,
   },
-  [Symbol("x")]: {
+  [Symbol('x')]: {
     value: 6,
     enumerable: true,
   },
-  [Symbol("z")]: {
+  [Symbol('z')]: {
     value: 7,
     enumerable: true,
   },
@@ -45,7 +45,7 @@ const o = Object.create(obj, {
  * 不包含Symbol
  *
  * */
-console.log("for in");
+console.log('for in');
 for (var n in o) {
   console.log(n, o[n]); // a,f,c
 }
@@ -55,8 +55,8 @@ for (var n in o) {
  * 不包含原型链的属性
  * 不包含Symbol
  * */
-console.log("keys");
-Object.keys(o).forEach((key) => {
+console.log('keys');
+Object.keys(o).forEach(key => {
   console.log(key); // c
 });
 
@@ -65,8 +65,8 @@ Object.keys(o).forEach((key) => {
  * 不包含原型链的属性
  * 不包含Symbol
  * */
-console.log("getOwnPropertyNames:");
-Object.getOwnPropertyNames(o).forEach((key) => {
+console.log('getOwnPropertyNames:');
+Object.getOwnPropertyNames(o).forEach(key => {
   console.log(key, o[key]); // b,c
 });
 
@@ -75,7 +75,7 @@ Object.getOwnPropertyNames(o).forEach((key) => {
  * 不包含原型链的属性
  * 包含Symbol
  * */
-console.log("getOwnPropertyDescriptors:");
+console.log('getOwnPropertyDescriptors:');
 const descriptors = Object.getOwnPropertyDescriptors(o);
 console.log(descriptors); // b,c,Symbol(x)
 
@@ -84,8 +84,8 @@ console.log(descriptors); // b,c,Symbol(x)
  * 不包含原型链的Symbol
  * 只包含Symbol，即使enumerable:false
  * */
-console.log("getOwnPropertySymbols:");
-const symbols = Object.getOwnPropertySymbols(o).forEach((symbol) => {
+console.log('getOwnPropertySymbols:');
+const symbols = Object.getOwnPropertySymbols(o).forEach(symbol => {
   console.log(symbol); // Symbol(x)
 });
 
@@ -94,9 +94,9 @@ const symbols = Object.getOwnPropertySymbols(o).forEach((symbol) => {
  * 不包含原型链的属性
  * 包含Symbol
  * */
-console.log("ownKeys:");
-const onwKeys = Reflect.ownKeys(o).forEach((key) => {
-  console.log("ownKeys", key); // b,c,Symbol(x)
+console.log('ownKeys:');
+const onwKeys = Reflect.ownKeys(o).forEach(key => {
+  console.log('ownKeys', key); // b,c,Symbol(x)
 });
 
 /**
@@ -104,13 +104,13 @@ const onwKeys = Reflect.ownKeys(o).forEach((key) => {
  * 不包含原型链的属性
  * 包含Symbol
  * */
-console.log("entries:");
+console.log('entries:');
 const extries = Object.entries(o);
 const values = Object.values(o);
-extries.forEach((item) => {
+extries.forEach(item => {
   console.log(item); // [c, 5]
 });
-values.forEach((item) => {
+values.forEach(item => {
   console.log(item); // 5
 });
 ```

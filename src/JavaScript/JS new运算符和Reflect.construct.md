@@ -45,8 +45,8 @@ var inst a = new Fn()
 
 ```js
 function Fn() {
-  this.name = "zw";
-  return "haha";
+  this.name = 'zw';
+  return 'haha';
 }
 var inst = new Fn(); // Fn {name: "zw"}
 ```
@@ -54,10 +54,10 @@ var inst = new Fn(); // Fn {name: "zw"}
 ```js
 var foo;
 function Fn() {
-  this.name = "zw";
+  this.name = 'zw';
   foo = this;
   return {
-    name: "haha"
+    name: 'haha',
   };
 }
 var inst = new Fn(); // {name: "haha"}
@@ -108,9 +108,9 @@ new Fn().say(); // 1,2
 ```js
 function Fn() {
   if (!(this instanceof Fn)) {
-    throw "不能当函数执行";
+    throw '不能当函数执行';
   }
-  this.name = "zw";
+  this.name = 'zw';
 }
 Fn();
 ```
@@ -120,9 +120,9 @@ Fn();
 ```js
 function Fn() {
   if (new.target !== Fn) {
-    throw "不能当函数执行";
+    throw '不能当函数执行';
   }
-  this.name = "zw";
+  this.name = 'zw';
 }
 Fn();
 
@@ -170,14 +170,14 @@ if (NewConstructor) {
 
 ```js
 function SuperType(name) {
-  console.log("SuperType call");
+  console.log('SuperType call');
   this.name = name;
 }
 SuperType.prototype.superSay = function() {
   console.log(`SuperType say`);
 };
 function SubType(name) {
-  console.log("SubType call");
+  console.log('SubType call');
   this.name = name;
 }
 SubType.prototype.say = function() {
@@ -186,7 +186,7 @@ SubType.prototype.say = function() {
 SubType.prototype.saySub = function() {
   console.log(this.name);
 };
-const inst = Reflect.construct(SuperType, ["zw"], SubType); // `SuperType say`，SubType并不会执行
+const inst = Reflect.construct(SuperType, ['zw'], SubType); // `SuperType say`，SubType并不会执行
 inst.saySub(); // zw, 原型[[Prototype]]指向 SubType
 inst.say(); // SubType say
 inst.superSay(); // error
@@ -199,7 +199,7 @@ Object.create 也可以实现继承功能，只不过 Object.create 单纯定义
 ```js
 function Fn() {}
 Fn.prototype.say = function() {
-  console.log("zw");
+  console.log('zw');
 };
 
 const inst = new Fn();

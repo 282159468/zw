@@ -75,15 +75,15 @@ var obj = {
   then: (cb, fail) => cb(2),
 };
 // 输出2
-Promise.resolve(obj).then((data) => console.log(data));
+Promise.resolve(obj).then(data => console.log(data));
 
 var obj = {
   then: (cb, fail) => fail(3),
 };
 // 并不会执行catch
-Promise.reject(obj).catch((err) => console.log("reject", err));
+Promise.reject(obj).catch(err => console.log('reject', err));
 // 输出resolve 3
-Promise.resolve(obj).catch((err) => console.log("resolve", err));
+Promise.resolve(obj).catch(err => console.log('resolve', err));
 ```
 
 ## Promise.resolve()
@@ -95,9 +95,9 @@ Promise.resolve(obj).catch((err) => console.log("resolve", err));
 ```js
 var p = Promise.reject(`no`);
 Promise.resolve(p).then(
-  (result) => console.log(result),
+  result => console.log(result),
   // 输出no
-  (reason) => console.log(reason)
+  reason => console.log(reason),
 );
 ```
 
@@ -117,7 +117,7 @@ p.then(
   // 不会执行
   function onRejected(reason) {
     console.log(reason);
-  }
+  },
 );
 ```
 
@@ -135,22 +135,22 @@ function ajax(url) {
 }
 function request(url) {
   return ajax(url)
-    .then((res) => {
+    .then(res => {
       // ....
     })
-    .catch((err) => {
-      alert("请求出错啦！");
+    .catch(err => {
+      alert('请求出错啦！');
       return err;
     });
 }
 
 // 调用端
-request("http://zw.com/age")
-  .then((res) => {
+request('http://zw.com/age')
+  .then(res => {
     console.log(`haha`, res);
   })
-  .catch((err) => {
-    console.log("获取年龄失败", err);
+  .catch(err => {
+    console.log('获取年龄失败', err);
   });
 ```
 
@@ -164,23 +164,23 @@ function ajax(url) {
 }
 function request(url) {
   return ajax(url)
-    .then((res) => {
+    .then(res => {
       // ....
     })
-    .catch((err) => {
-      alert("请求出错啦！");
+    .catch(err => {
+      alert('请求出错啦！');
       return Promise.reject(err);
     });
 }
 
 // 调用端
-request("http://zw.com/age")
-  .then((res) => {
+request('http://zw.com/age')
+  .then(res => {
     console.log(`haha`, res);
   })
   // 正常输出
-  .catch((err) => {
-    console.log("获取年龄失败", err);
+  .catch(err => {
+    console.log('获取年龄失败', err);
   });
 ```
 
@@ -195,24 +195,24 @@ function ajax(url) {
 function request(url) {
   return new Promise((resolve, reject) => {
     return ajax(url)
-      .then((res) => {
+      .then(res => {
         // ....
       })
-      .catch((err) => {
-        alert("请求出错啦！");
+      .catch(err => {
+        alert('请求出错啦！');
         return reject(err);
       });
   });
 }
 
 // 调用端
-request("http://zw.com/age")
-  .then((res) => {
+request('http://zw.com/age')
+  .then(res => {
     console.log(`haha`, res);
   })
   // 正常输出
-  .catch((err) => {
-    console.log("获取年龄失败", err);
+  .catch(err => {
+    console.log('获取年龄失败', err);
   });
 ```
 
@@ -221,20 +221,20 @@ request("http://zw.com/age")
 如果异常没有被处理，会一直传递下去直到 catch 或者 onRejected
 
 ```js
-var p = new Promise((resolve, reject) => reject("出错啦！"));
+var p = new Promise((resolve, reject) => reject('出错啦！'));
 p.then(
   // 只定义了完成处理函数
-  () => console.log("Fulfilled"),
+  () => console.log('Fulfilled'),
   // 没有定义onRejected，但有类似这样的默认异常处理函数
-  (err) => {
+  err => {
     throw new Error(err + 2);
-  }
+  },
 )
   .then(function(v) {
     return v * 2;
   })
   // 即使前一个then也没处理异常，这里还是能捕获到
-  .catch((err) => console.log("处理异常", err));
+  .catch(err => console.log('处理异常', err));
 ```
 
 如果不显示声明 onFulfilled 函数，其行为和 onRejected 类似
@@ -244,10 +244,10 @@ p.then(
 不管是 then 的 onRejected 还是 catch 函数自身都有可能出现异常，要处理这部分异常是无止尽的
 
 ```js
-var p = new Promise((resolve, reject) => reject("出错啦！"));
-p.then().catch((err) => {
+var p = new Promise((resolve, reject) => reject('出错啦！'));
+p.then().catch(err => {
   a.b();
-  console.log("处理异常", err);
+  console.log('处理异常', err);
 });
 ```
 
@@ -265,11 +265,11 @@ new Promise(fn)参数 fn 函数内部的异常是可以被捕获的，但传递�
 ```js
 var p = new Promise((resolve, reject) => {
   a.b();
-}).catch((err) => console.log(err));
+}).catch(err => console.log(err));
 ```
 
 ```js
-var p = new Promise([]).catch((err) => console.log(err));
+var p = new Promise([]).catch(err => console.log(err));
 ```
 
 ## promise 链
@@ -280,13 +280,13 @@ then 和 catch 处理函数的返回值如果是 promise，在后续回调中接
 var p = new Promise((resolve, reject) => {
   reject(1);
 })
-  .catch((err) => Promise.reject(2))
-  .catch((err) => {
+  .catch(err => Promise.reject(2))
+  .catch(err => {
     // 输出2
     console.log(err);
     return 3;
   })
-  .then((v) => {
+  .then(v => {
     // 输出3，上一步的catch重置了当前promise链为完成状态
     // 第一catch没有“重置”是因为返回了新promise改变了当前promise,其实他重置的promise对象是p
     console.log(v);
@@ -321,21 +321,21 @@ all 的问题是有 promise 失败时，获取不到另外状态为完成的 pro
 ```js
 var thenable = {
   then: (onFulfilled, onRejcted) => {
-    console.log("thenable");
+    console.log('thenable');
     onFulfilled(1);
   },
 };
 var p2 = new Promise((resolve, reject) => {
-  console.log("p2");
+  console.log('p2');
   reject(2);
 });
-var p3 = new Promise((resolve) => {
-  console.log("p3");
+var p3 = new Promise(resolve => {
+  console.log('p3');
   setTimeout(() => resolve(3));
 });
 Promise.all([thenable, p2, p3])
-  .then((data) => console.log("data", data))
-  .catch((err) => console.log("err", err));
+  .then(data => console.log('data', data))
+  .catch(err => console.log('err', err));
 ```
 
 ### race
@@ -344,16 +344,16 @@ Promise.all([thenable, p2, p3])
 
 ```js
 var p1 = new Promise((resolve, reject) => {
-  console.log("p1");
+  console.log('p1');
   reject(1);
 });
-var p3 = new Promise((resolve) => {
-  console.log("p2");
+var p3 = new Promise(resolve => {
+  console.log('p2');
   setTimeout(() => resolve(2));
 });
 Promise.all([p1, p2])
-  .then((data) => console.log("data", data))
-  .catch((err) => console.log("err", err));
+  .then(data => console.log('data', data))
+  .catch(err => console.log('err', err));
 ```
 
 ### allSettled
@@ -365,21 +365,21 @@ allSettled 返回的 promise 决议状态是稳定的(settled)完成状态，不
 ```js
 var thenable = {
   then: (onFulfilled, onRejcted) => {
-    console.log("thenable");
+    console.log('thenable');
     throw new Error(111);
   },
 };
 var p2 = new Promise((resolve, reject) => {
-  console.log("p2");
+  console.log('p2');
   reject(2);
 });
-var p3 = new Promise((resolve) => {
-  console.log("p3");
+var p3 = new Promise(resolve => {
+  console.log('p3');
   setTimeout(() => resolve(3));
 });
 Promise.allSettled([thenable, p2, p3])
-  .then((data) => console.log("data", data))
-  .catch((err) => console.log("err", err));
+  .then(data => console.log('data', data))
+  .catch(err => console.log('err', err));
 ```
 
 输出 data 结果为：
@@ -409,7 +409,7 @@ Promise.allSettled([thenable, p2, p3])
 
 ```js
 this.setState({ loading: true });
-request("zw.com").finally(() => {
+request('zw.com').finally(() => {
   this.setState({ loading: false });
 });
 ```
@@ -417,19 +417,19 @@ request("zw.com").finally(() => {
 ```js
 Promise.reslove(1)
   .finally(() => 2)
-  .then((n) => console.log(n));
+  .then(n => console.log(n));
 ```
 
 ```js
 Promise.reject(1)
   .finally(() => 2)
-  .catch((n) => console.log(n));
+  .catch(n => console.log(n));
 ```
 
 ```js
 Promise.reject(1)
   .finally(() => a.b())
-  .catch((n) => console.log(n));
+  .catch(n => console.log(n));
 ```
 
 ## Promise 和事件循环
@@ -440,85 +440,85 @@ Promise.reject(1)
 
 ```js
 async function async1() {
-  console.log("1");
+  console.log('1');
   await async2();
-  console.log("2");
+  console.log('2');
   await async3();
 }
 async function async2() {
-  console.log("3");
+  console.log('3');
 }
 async function async3() {
-  console.log("4");
+  console.log('4');
 }
 // 开始执行
-console.log("5");
+console.log('5');
 setTimeout(function() {
-  console.log("6");
+  console.log('6');
 }, 0);
 async1();
 new Promise(function(resolve) {
-  console.log("7");
+  console.log('7');
   resolve();
 }).then(function() {
-  console.log("8");
+  console.log('8');
 });
-console.log("9");
+console.log('9');
 ```
 
 ```js
 new Promise((resolve, reject) => {
-  console.log("1");
+  console.log('1');
   resolve();
 })
   .then(() => {
-    console.log("2");
+    console.log('2');
     new Promise((resolve, reject) => {
-      console.log("3");
+      console.log('3');
       resolve();
     })
       .then(() => {
-        console.log("4");
+        console.log('4');
       })
       .then(() => {
-        console.log("5");
+        console.log('5');
       })
       .then(() => {
-        console.log("6");
+        console.log('6');
       })
       .then(() => {
-        console.log("7");
+        console.log('7');
       })
       .then(() => {
-        console.log("8");
+        console.log('8');
       })
       .then(() => {
-        console.log("9");
+        console.log('9');
       });
     return new Promise((resolve, reject) => {
       resolve();
     })
       .then(() => {
-        console.log("11");
+        console.log('11');
       })
       .then(() => {
-        console.log("12");
+        console.log('12');
       });
   })
   .then(() => {
-    console.log("13");
+    console.log('13');
   });
 ```
 
 ```js
-new Promise((resolve) => {
+new Promise(resolve => {
   resolve();
   Promise.resolve().then(() => console.log(2));
 }).then(() => console.log(4));
 ```
 
 ```js
-new Promise((resolve) => {
+new Promise(resolve => {
   resolve();
   Promise.resolve({
     then: function(resolve, reject) {

@@ -8,8 +8,8 @@ route: /js-extends
 
 ```js
 function SuperType() {
-  this.name = "foo";
-  this.books = ["js", "css"];
+  this.name = 'foo';
+  this.books = ['js', 'css'];
 }
 
 SuperType.bar = 1;
@@ -23,12 +23,12 @@ function SubType(name) {
 
 SubType.prototype = new SuperType();
 
-const c = new SubType("foo1");
+const c = new SubType('foo1');
 c.sayName(); // foo1
 c.bar; // undefined
-c.books.push("html");
+c.books.push('html');
 
-const c2 = new SubType("foo2");
+const c2 = new SubType('foo2');
 c2.sayName(); // foo2
 c2.books; // ["js", "css", "html"]
 ```
@@ -54,7 +54,7 @@ c2.books; // ["js", "css", "html"]
 
 ```js
 function SuperType() {
-  this.name = "a";
+  this.name = 'a';
 }
 
 SuperType.foo = 1;
@@ -89,7 +89,7 @@ c.\_\_proto\_\_ - SubType.prototype - SubType.prototype.\_\_proto\_\_ - SuperTyp
 ```js
 function SuperType(name) {
   this.name = name;
-  this.books = ["js", "css"];
+  this.books = ['js', 'css'];
 }
 
 SuperType.prototype.sayName = function() {
@@ -101,14 +101,14 @@ function SubType(name) {
   this.age = 35;
 }
 
-const inst = new SubType("zw");
-inst.books.push("html");
+const inst = new SubType('zw');
+inst.books.push('html');
 console.log(inst.age); // 35
 console.log(inst.name); // zw
 console.log(inst instanceof SuperType); // false
 console.log(inst.sayName()); // error
 
-const inst2 = new SubType("zw");
+const inst2 = new SubType('zw');
 console.log(inst2.books); // ["js", "css"]
 ```
 
@@ -129,14 +129,14 @@ console.log(inst2.books); // ["js", "css"]
 ```js
 function SuperType(name) {
   this.name = name;
-  this.books = ["js", "css"];
+  this.books = ['js', 'css'];
 }
 
 SuperType.prototype.sayName = function() {
   return this.name;
 };
 
-SuperType.prototype.works = ["foo", "bar"];
+SuperType.prototype.works = ['foo', 'bar'];
 
 function SubType(name) {
   const o = SuperType.call(this, name);
@@ -145,10 +145,10 @@ function SubType(name) {
 
 SubType.prototype = new SuperType();
 
-const inst = new SubType("zw");
+const inst = new SubType('zw');
 const inst2 = new SubType();
-inst.books.push("html");
-inst.works.push("baz");
+inst.books.push('html');
+inst.works.push('baz');
 console.log(inst instanceof SuperType); // true
 console.log(inst.sayName()); // zw
 console.log(inst.books); // ["js", "css", "html"]
@@ -177,7 +177,7 @@ console.log(inst2.works); // ["foo", "bar", "baz"]
 ```js
 function SuperType(name) {
   this.name = name;
-  this.books = ["js", "css"];
+  this.books = ['js', 'css'];
 }
 
 SuperType.prototype.sayName = function() {
@@ -192,7 +192,7 @@ function SubType(name) {
   return o;
 }
 
-const inst = new SubType("zw");
+const inst = new SubType('zw');
 ```
 
 这种继承方式特点创建实例时 SubType()和 new SubType()效果是一样的
@@ -206,7 +206,7 @@ const inst = new SubType("zw");
 ```js
 function SuperType(name) {
   this.name = name;
-  this.books = ["js", "css"];
+  this.books = ['js', 'css'];
 }
 
 SuperType.prototype.sayName = function() {
@@ -220,7 +220,7 @@ function SubType(name) {
 
 SubType.prototype = new SuperType();
 SubType.prototype.constructor = SubType;
-const inst = new SubType("zw");
+const inst = new SubType('zw');
 ```
 
 上面是组合继承代码，寄生组合只需要修改 SubType.prototype = new SuperType();
@@ -238,7 +238,7 @@ SubType.prototype = new Fn();
 ```js
 function SuperType(name) {
   this.name = name;
-  this.books = ["js", "css"];
+  this.books = ['js', 'css'];
 }
 
 SuperType.prototype.sayName = function() {
@@ -254,7 +254,7 @@ const Fn = function() {};
 Fn.prototype = new SuperType();
 SubType.prototype = new Fn();
 SubType.prototype.constructor = SubType;
-const inst = new SubType("zw");
+const inst = new SubType('zw');
 ```
 
 通过中间这个 Fn 构造函数解决了组合继承调用两次 SuperType 造成每个实例和 SubType.prototype 上都有重复属性的问题;原型链也正常 inst 同时是 SubType、SuperType 的实例符合预期

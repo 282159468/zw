@@ -78,7 +78,7 @@ NaN === NaN; // false
 
 ```js
 isNaN(NaN); // true
-isNaN("x"); // true
+isNaN('x'); // true
 ```
 
 可以看出这个方法挺鸡肋的，于是又有了
@@ -87,7 +87,7 @@ isNaN("x"); // true
 
 ```js
 Number.isNaN(NaN); // true
-Number.isNaN("x"); // false
+Number.isNaN('x'); // false
 ```
 
 ### 其他类型转为数值类型
@@ -108,12 +108,12 @@ https://sinaad.github.io/xfe/2016/04/15/ToPrimitive/
 var o = {
   valueOf() {
     console.log(`call valueOf`);
-    return "x";
+    return 'x';
   },
   toString() {
     console.log(`call toString`); // 并不会执行toString
-    return "x";
-  }
+    return 'x';
+  },
 };
 console.log(Number(o));
 ```
@@ -126,8 +126,8 @@ var o = {
   },
   toString() {
     console.log(`call toString`); // 执行toString
-    return "x";
-  }
+    return 'x';
+  },
 };
 console.log(Number(o));
 ```
@@ -141,7 +141,7 @@ var o = {
   toString() {
     console.log(`call toString`);
     return {};
-  }
+  },
 };
 console.log(Number(o)); // 报错
 ```

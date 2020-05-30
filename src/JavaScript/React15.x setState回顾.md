@@ -1,11 +1,11 @@
-前几天读了 React16.x 的 useState 源码，其中时不时碰到 Fiber，但 16 的 Fiber 一块很难啃的，一直没有攻下来，啃 Fiber 之前自己想回顾下 React15.x 的 setState 批量更新，为读Fiber做准备
+前几天读了 React16.x 的 useState 源码，其中时不时碰到 Fiber，但 16 的 Fiber 一块很难啃的，一直没有攻下来，啃 Fiber 之前自己想回顾下 React15.x 的 setState 批量更新，为读 Fiber 做准备
 
 ```jsx
 class App extends PureComponent {
   constructor() {
     super();
     this.state = {
-      a: 1
+      a: 1,
     };
   }
 
@@ -15,7 +15,7 @@ class App extends PureComponent {
   };
 
   render() {
-    console.log("this.state.a");
+    console.log('this.state.a');
     return <div onClick={this.onClick}>{this.state.a}</div>;
   }
 }
@@ -83,7 +83,7 @@ var ReactDefaultBatchingStrategy = {
     } else {
       return transaction.perform(callback, null, a, b, c, d, e);
     }
-  }
+  },
 };
 ```
 
@@ -100,7 +100,7 @@ function fn() {
 }
 
 const wrappers = [
-  { before: () => console.log(0), after: () => console.log(2) }
+  { before: () => console.log(0), after: () => console.log(2) },
 ];
 
 const transaction = new Transaction(fn, wrappers);
@@ -118,12 +118,12 @@ var RESET_BATCHED_UPDATES = {
   initialize: emptyFunction,
   close: function() {
     ReactDefaultBatchingStrategy.isBatchingUpdates = false;
-  }
+  },
 };
 
 var FLUSH_BATCHED_UPDATES = {
   initialize: emptyFunction,
-  close: ReactUpdates.flushBatchedUpdates.bind(ReactUpdates)
+  close: ReactUpdates.flushBatchedUpdates.bind(ReactUpdates),
 };
 
 var TRANSACTION_WRAPPERS = [FLUSH_BATCHED_UPDATES, RESET_BATCHED_UPDATES];
@@ -150,4 +150,5 @@ var flushBatchedUpdates = function() {
   }
 };
 ```
-dirtyComponents就是enqueueUpdate中保存的脏组件，最后更新state
+
+dirtyComponents 就是 enqueueUpdate 中保存的脏组件，最后更新 state

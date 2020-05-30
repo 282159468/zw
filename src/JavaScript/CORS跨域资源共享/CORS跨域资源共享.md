@@ -36,7 +36,7 @@ CORS 跨域资源共享是一种使用 XMLHttpRequest 实现跨域请求 的方�
 
 Content-Type: multipart/form-data
 
-```jsx
+```js
 boundary=----WebKitFormBoundaryI26Ec4f1hSPAyBfH
 
 ------WebKitFormBoundaryI26Ec4f1hSPAyBfH
@@ -63,21 +63,21 @@ Content-Disposition: form-data; name="b"
 ```js
 // Request
 var xhr = new XMLHttpRequest();
-xhr.open("POST", "http://localhost:3002/cors-simple-request");
+xhr.open('POST', 'http://localhost:3002/cors-simple-request');
 xhr.send();
-xhr.addEventListener("load", function() {
+xhr.addEventListener('load', function() {
   console.log(xhr.responseText);
 });
 
 // Response
-app.all("/cors-simple-request", function(req, res, next) {
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Credentials", true);
-  res.json({ msg: "This is CORS-enabled" });
+app.all('/cors-simple-request', function(req, res, next) {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Credentials', true);
+  res.json({ msg: 'This is CORS-enabled' });
 });
 ```
 
-```jsx
+```js
 // Request
 POST /cors-simple-request HTTP/1.1
 Host: localhost:3002
@@ -135,8 +135,8 @@ https://bugs.chromium.org/p/chromium/issues/detail?id=995740#c1
 
 ```js
 var xhr = new XMLHttpRequest();
-xhr.open("POST", "http://localhost:3002/cors");
-xhr.setRequestHeader("Content-Type", "application/json");
+xhr.open('POST', 'http://localhost:3002/cors');
+xhr.setRequestHeader('Content-Type', 'application/json');
 xhr.send(JSON.stringify({ a: 2 }));
 ```
 
@@ -145,14 +145,14 @@ xhr.send(JSON.stringify({ a: 2 }));
 ```js
 app.use(
   cors({
-    origin: "http://localhost:3001",
-    methods: ["GET", "PUT", "POST"],
-    allowedHeaders: ["X-Custom-Header", "Content-Type"],
-    preflightContinue: true
-  })
+    origin: 'http://localhost:3001',
+    methods: ['GET', 'PUT', 'POST'],
+    allowedHeaders: ['X-Custom-Header', 'Content-Type'],
+    preflightContinue: true,
+  }),
 );
-app.post("/cors", function(req, res, next) {
-  res.json({ msg: "This is CORS-enabled" });
+app.post('/cors', function(req, res, next) {
+  res.json({ msg: 'This is CORS-enabled' });
 });
 ```
 
@@ -182,20 +182,20 @@ app.post("/cors", function(req, res, next) {
 
 ```js
 var xhr = new XMLHttpRequest();
-xhr.open("DELETE", "http://localhost:3002/cors");
+xhr.open('DELETE', 'http://localhost:3002/cors');
 xhr.send();
-xhr.addEventListener("load", function(e) {
-  console.log("load", xhr.status, xhr.responseText);
+xhr.addEventListener('load', function(e) {
+  console.log('load', xhr.status, xhr.responseText);
 });
-xhr.addEventListener("error", function(e) {
+xhr.addEventListener('error', function(e) {
   // xhr.status:0表示请求失败或者请求未完成
-  console.log("onerror", xhr.status, xhr.statusText);
+  console.log('onerror', xhr.status, xhr.statusText);
 });
 ```
 
 `Access-Control-Allow-Methods`不包含`DELETE`请求
 
-```jsx
+```js
 HTTP/1.1 200 OK
 X-Powered-By: Express
 Access-Control-Allow-Origin: http://localhost:3001
@@ -214,7 +214,9 @@ Connection: keep-alive
 ## CROS Request 字段
 
 ### Origin
+
 ### Access-Control-Request-Method
+
 ### Aceess-Control-Request-Headers
 
 ## CROS Response 字段
@@ -231,7 +233,7 @@ Connection: keep-alive
 
 是否允许客户携带 `Cookie` 请求,针对请求中添加了 `xhr.withCredentials`,如果同时设置了`Origin`为\*请求时会抛出下面的异常
 
-```jsx
+```js
 Access to XMLHttpRequest at 'http://localhost:3002/cors-all-origin' from origin 'http://localhost:3001' has been blocked by CORS policy: The value of the 'Access-Control-Allow-Origin' header in the response must not be the wildcard '*' when the request's credentials mode is 'include'. The credentials mode of requests initiated by the XMLHttpRequest is controlled by the withCredentials attribute.
 ```
 
@@ -242,17 +244,17 @@ CORS 中 XMLHttpRequest 实例通过 `getResponseHeader`或者 `getAllResponseHe
 ```js
 // Request
 var xhr = new XMLHttpRequest();
-xhr.open("POST", "http://localhost:3002/cors-getResponseHeader");
+xhr.open('POST', 'http://localhost:3002/cors-getResponseHeader');
 xhr.send();
-xhr.addEventListener("load", function() {
+xhr.addEventListener('load', function() {
   console.log(xhr.responseText, xhr.getAllResponseHeaders());
 });
 
 // Response
-app.all("/cors-getResponseHeader", function(req, res, next) {
-  res.setHeader("Res-X-Header", "value");
-  res.setHeader("Access-Control-Expose-Headers", "Res-X-Header");
-  res.json({ msg: "This is CORS-enabled" });
+app.all('/cors-getResponseHeader', function(req, res, next) {
+  res.setHeader('Res-X-Header', 'value');
+  res.setHeader('Access-Control-Expose-Headers', 'Res-X-Header');
+  res.json({ msg: 'This is CORS-enabled' });
 });
 ```
 

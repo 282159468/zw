@@ -1,4 +1,5 @@
 {
+  "private": true,
   "name": "zw",
   "version": "1.0.0",
   "description": "",
@@ -15,12 +16,27 @@
   "bugs": {
     "url": "https://github.com/282159468/zw/issues"
   },
-  "homepage": "https://github.com/282159468/zw#readme",
+  "gitHooks": {
+    "pre-commit": "lint-staged"
+  },
+  "lint-staged": {
+    "*.{js,jsx,less,md,json}": [
+      "prettier --write"
+    ],
+    "*.ts?(x)": [
+      "prettier --parser=typescript --write"
+    ]
+  },
   "dependencies": {
-    "father": "^2.29.2"
+    "react": "^16.12.0"
   },
   "devDependencies": {
-    "cors": "^2.8.5",
-    "express": "^4.17.1"
+    "@umijs/preset-react": "1.x",
+    "@umijs/test": "^3.0.5",
+    "dumi": "^1.0.26",
+    "father-build": "^1",
+    "lint-staged": "^10.0.7",
+    "prettier": "^1.19.1",
+    "yorkie": "^2.0.0"
   }
 }

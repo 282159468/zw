@@ -64,12 +64,12 @@ var fourArgumentPooler = function(a1, a2, a3, a4) {
 var standardReleaser = function(instance) {
   var Klass = this;
   !(instance instanceof Klass)
-    ? process.env.NODE_ENV !== "production"
+    ? process.env.NODE_ENV !== 'production'
       ? invariant(
           false,
-          "Trying to release an instance into a pool of a different type."
+          'Trying to release an instance into a pool of a different type.',
         )
-      : _prodInvariant("25")
+      : _prodInvariant('25')
     : void 0;
   instance.destructor();
   if (Klass.instancePool.length < Klass.poolSize) {
@@ -132,7 +132,7 @@ var FnWithPool = addPoolingTo(Fn);
 ### 获取实例 getPooled(arg)
 
 ```js
-var inst = FnWithPool.getPooled("zw");
+var inst = FnWithPool.getPooled('zw');
 ```
 
 因为 var FnWithPool = addPoolingTo(Fn)没有添加第二个参数，所以 getPooled 为 oneArgumentPooler
@@ -216,7 +216,7 @@ function SyntheticEvent(
   dispatchConfig,
   targetInst,
   nativeEvent,
-  nativeEventTarget
+  nativeEventTarget,
 ) {
   //...
 }
@@ -224,7 +224,7 @@ function releasePooledEvent(event) {
   const EventConstructor = this;
   invariant(
     event instanceof EventConstructor,
-    "Trying to release an event instance into a pool of a different type."
+    'Trying to release an event instance into a pool of a different type.',
   );
   event.destructor();
   if (EventConstructor.eventPool.length < EVENT_POOL_SIZE) {
@@ -249,7 +249,7 @@ function getPooledEvent(dispatchConfig, targetInst, nativeEvent, nativeInst) {
       dispatchConfig,
       targetInst,
       nativeEvent,
-      nativeInst
+      nativeInst,
     );
     return instance;
   }
@@ -257,7 +257,7 @@ function getPooledEvent(dispatchConfig, targetInst, nativeEvent, nativeInst) {
     dispatchConfig,
     targetInst,
     nativeEvent,
-    nativeInst
+    nativeInst,
   );
 }
 ```
@@ -300,6 +300,7 @@ https://div.io/topic/1269
 https://github.com/petkaantonov/bluebird/wiki/Optimization-killers#3-managing-arguments
 
 大概包括下面几种情况让函数无法被优化
+
 - with eval 这两个意料中的
 - 包含 debugger
 - arguments 使用不当

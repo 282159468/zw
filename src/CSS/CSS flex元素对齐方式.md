@@ -1,5 +1,5 @@
 ---
-route: /css-flex-align
+title: CSS flex元素对齐方式
 ---
 
 理清 flex 元素对齐方式之前，需要了解轴的定义，flex 布局中轴分为主轴、交叉轴。轴类型由 flex-direction 决定

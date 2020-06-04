@@ -5,7 +5,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "doc": "father doc dev"
+    "doc": "dumi dev"
   },
   "repository": {
     "type": "git",

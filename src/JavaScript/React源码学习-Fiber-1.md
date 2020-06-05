@@ -16,7 +16,7 @@ React 渲染主要有以下三个部分
 2. Reconciler 对比 Virtual DOM 差异，执行生命周期函数
 3. Renderer 渲染器，比如 ReactDOM 、ReactNative
 
-由于以上机制 16 之前的生命周期 compoentWillMount componentWillReceiveProps componentWillUpdate 将会废弃，因为暂停=>恢复会造成多次执行，所以生命周期内副作用就会产生
+由于以上机制 16 之前的生命周期 compoentWillMount componentWillReceiveProps componentWillUpdate 将会废弃，因为暂停=>恢复会造成多次执行，所以生命周期内副作用就会变的不可控
 
 组件在第一次渲染时根据 render 函数返回的 React Element 元素创建对应的 Fiber Tree 可以称为 current，当更新时会创建新的 Fiber 称为 alternate，对比 current 和 alternate 的变化(side effect)记录到 alternate 上，更新结束后 alternate 取代 current
 
@@ -79,12 +79,14 @@ export type Fiber = {|
 
   // Input is the data coming into process this fiber. Arguments. Props.
   pendingProps: any, // This type will be more specific once we overload the tag.
+  // 记录组件props数据
   memoizedProps: any, // The props used to create the output.
 
   // A queue of state updates and callbacks.
   updateQueue: mixed,
 
   // The state used to create the output
+  // 记录组件的state数据
   memoizedState: any,
 
   // Dependencies (contexts, events) for this fiber, if it has any
@@ -158,9 +160,27 @@ export type Fiber = {|
 |};
 ```
 
-通过 return child sibling 三个属性遍历 Fiber 树
+Fiber 属性具体含义详细https://juejin.im/post/5d5aa4695188257573635a0d
+
+另外一个更详细的https://github.com/y805939188/simple-react/tree/master/procedure/%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB/fiber2
+
+## return child sibling 属性
+
+通过 return child sibling 三个属性构造 Fiber 树
+
+return 表示父节点
+
+child 表示第一个子节点
+
+sibling 表示兄弟节点
 
 - [ ] Fiber 和 Element 对照图片
+
+## alternate current 属性
+
+初始渲染时生成 Fiber 树（A），更新时生成一个包含新状态的 Fiber 树（B），B.FiberX.current 指向 A.FiberX，A.FiberX.alternate 指向 B
+
+即 current 表示当前状态的 Fiber，alternate 表示即将更新的 Fiber
 
 ```ts
 export type WorkTag =
@@ -214,5 +234,15 @@ export const FundamentalComponent = 20;
 export const ScopeComponent = 21;
 export const Block = 22;
 ```
+
+## requestIdleCallback
+
+上面提到的 Fiber 会让权给浏览器，等待浏览空闲时再恢复执行，这里的空闲就需要借助 requestIdleCallback 借口，requestIdleCallback(fn )，表示 fn 在下一次事件循环前执行
+
+## 优先级如何计算
+
+## 组件数据的输出
+
+组件的通过 Fiber 上的数据更新 state props，所以才有 Hooks 让函数组件有了状态，在这之前因为函数组件没有 this 没办法保存 state
 
 https://github.com/jianjiachenghub/react-deeplearn/tree/master/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0

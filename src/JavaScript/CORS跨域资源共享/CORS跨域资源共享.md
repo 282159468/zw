@@ -1,5 +1,5 @@
 ---
-route: /cors
+title: CORS跨域资源共享
 ---
 
 CORS 跨域资源共享是一种使用 XMLHttpRequest 实现跨域请求 的方法，CORS 请求分为两种

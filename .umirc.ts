@@ -1,6 +1,6 @@
 import { defineConfig } from 'dumi';
 
 export default defineConfig({
-  title: 'Library Name',
+  title: 'zw',
   // more config: https://d.umijs.org/config
 });

@@ -1,3 +1,5 @@
 ---
-route: /http-client-hints
+title: HTTP-Client-Hints
 ---
+
+HTTP-Client-Hints

@@ -55,7 +55,7 @@ export function render(
   container: Container,
   callback: ?Function,
 ) {
-  // render初始就是返回legacyRenderSubtreeIntoContainer
+  // render其实就是执行legacyRenderSubtreeIntoContainer，并返回他的结果
   return legacyRenderSubtreeIntoContainer(
     null,
     element,
@@ -420,6 +420,211 @@ export function initializeUpdateQueue<State>(fiber: Fiber): void {
 
 - 初始化 rootFiber.updateQueue
 
-大概调用栈
+## createRoot 大概调用栈
 
 <img src="/images/react-legacy-render调用栈.png">
+
+<hr/>
+
+创建完 fiber 后，下面创建更新，进入任务调度
+
+## updateContainer
+
+```js
+export function updateContainer(
+  element: ReactNodeList,
+  container: OpaqueRoot,
+  parentComponent: ?React$Component<any, any>,
+  callback: ?Function,
+): ExpirationTime {
+  // suspense相关的先不关注
+  const suspenseConfig = requestCurrentSuspenseConfig();
+  // 过期日期这个需要和后面串起来看
+  // legacyRender初次渲染返回一个常量Sync = 1073741823
+  const expirationTime = computeExpirationForFiber(
+    currentTime,
+    current,
+    suspenseConfig,
+  );
+
+  const context = getContextForSubtree(parentComponent);
+  if (container.context === null) {
+    container.context = context;
+  } else {
+    container.pendingContext = context;
+  }
+
+  // 创建一个普通更新对象
+  const update = createUpdate(expirationTime, suspenseConfig);
+  // Caution: React DevTools currently depends on this property
+  // being called "element".
+  // 把<App /> React Element保存到更新对象上
+  update.payload = { element };
+
+  callback = callback === undefined ? null : callback;
+  if (callback !== null) {
+    update.callback = callback;
+  }
+
+  enqueueUpdate(current, update);
+  // 调度任务
+  scheduleUpdateOnFiber(current, expirationTime);
+
+  return expirationTime;
+}
+```
+
+## scheduleUpdateOnFiber
+
+```js
+export function scheduleUpdateOnFiber(
+  fiber: Fiber,
+  expirationTime: ExpirationTime,
+) {
+  // 检查嵌套更新达到上限报错，比如在render中setState这种无限循环
+  checkForNestedUpdates();
+  warnAboutRenderPhaseUpdatesInDEV(fiber);
+
+  const root = markUpdateTimeFromFiberToRoot(fiber, expirationTime);
+  if (root === null) {
+    warnAboutUpdateOnUnmountedFiberInDEV(fiber);
+    return;
+  }
+
+  // TODO: computeExpirationForFiber also reads the priority. Pass the
+  // priority as an argument to that function and this one.
+  const priorityLevel = getCurrentPriorityLevel();
+
+  // legacy标识为Sync
+  if (expirationTime === Sync) {
+    // 确认初次渲染
+    if (
+      // Check if we're inside unbatchedUpdates
+      (executionContext & LegacyUnbatchedContext) !== NoContext &&
+      // Check if we're not already rendering
+      (executionContext & (RenderContext | CommitContext)) === NoContext
+    ) {
+      // Register pending interactions on the root to avoid losing traced interaction data.
+      schedulePendingInteractions(root, expirationTime);
+
+      // This is a legacy edge case. The initial mount of a ReactDOM.render-ed
+      // root inside of batchedUpdates should be synchronous, but layout updates
+      // should be deferred until the end of the batch.
+      performSyncWorkOnRoot(root);
+    } else {
+      ensureRootIsScheduled(root);
+      schedulePendingInteractions(root, expirationTime);
+      if (executionContext === NoContext) {
+        // Flush the synchronous work now, unless we're already working or inside
+        // a batch. This is intentionally inside scheduleUpdateOnFiber instead of
+        // scheduleCallbackForFiber to preserve the ability to schedule a callback
+        // without immediately flushing it. We only do this for user-initiated
+        // updates, to preserve historical behavior of legacy mode.
+        flushSyncCallbackQueue();
+      }
+    }
+  } else {
+    ensureRootIsScheduled(root);
+    schedulePendingInteractions(root, expirationTime);
+  }
+
+  if (
+    (executionContext & DiscreteEventContext) !== NoContext &&
+    // Only updates at user-blocking priority or greater are considered
+    // discrete, even inside a discrete event.
+    (priorityLevel === UserBlockingPriority ||
+      priorityLevel === ImmediatePriority)
+  ) {
+    // This is the result of a discrete event. Track the lowest priority
+    // discrete update per root so we can flush them early, if needed.
+    if (rootsWithPendingDiscreteUpdates === null) {
+      rootsWithPendingDiscreteUpdates = new Map([[root, expirationTime]]);
+    } else {
+      const lastDiscreteTime = rootsWithPendingDiscreteUpdates.get(root);
+      if (lastDiscreteTime === undefined || lastDiscreteTime > expirationTime) {
+        rootsWithPendingDiscreteUpdates.set(root, expirationTime);
+      }
+    }
+  }
+}
+```
+
+```js
+// This is split into a separate function so we can mark a fiber with pending
+// work without treating it as a typical update that originates from an event;
+// e.g. retrying a Suspense boundary isn't an update, but it does schedule work
+// on a fiber.
+function markUpdateTimeFromFiberToRoot(fiber, expirationTime) {
+  // Update the source fiber's expiration time
+  // 这个fiber就是上面通过FiberNode工厂创建的，expirationTime = NoWork = 0
+  // 传入的expirationTime是Sync
+  if (fiber.expirationTime < expirationTime) {
+    fiber.expirationTime = expirationTime;
+  }
+  let alternate = fiber.alternate;
+  if (alternate !== null && alternate.expirationTime < expirationTime) {
+    alternate.expirationTime = expirationTime;
+  }
+  // Walk the parent path to the root and update the child expiration time.
+  // 初次渲染return为空没有父级节点了
+  let node = fiber.return;
+  let root = null;
+  if (node === null && fiber.tag === HostRoot) {
+    root = fiber.stateNode;
+  } else {
+    // 非次渲染从当前节点往上循环设置所有父节点的childExpirationTime = expirationTime
+    // 最终找到root
+    while (node !== null) {
+      alternate = node.alternate;
+      if (node.childExpirationTime < expirationTime) {
+        node.childExpirationTime = expirationTime;
+        if (
+          alternate !== null &&
+          alternate.childExpirationTime < expirationTime
+        ) {
+          alternate.childExpirationTime = expirationTime;
+        }
+      } else if (
+        alternate !== null &&
+        alternate.childExpirationTime < expirationTime
+      ) {
+        alternate.childExpirationTime = expirationTime;
+      }
+      if (node.return === null && node.tag === HostRoot) {
+        root = node.stateNode;
+        break;
+      }
+      node = node.return;
+    }
+  }
+
+  if (root !== null) {
+    if (workInProgressRoot === root) {
+      // Received an update to a tree that's in the middle of rendering. Mark
+      // that's unprocessed work on this root.
+      markUnprocessedUpdateTime(expirationTime);
+
+      if (workInProgressRootExitStatus === RootSuspendedWithDelay) {
+        // The root already suspended with a delay, which means this render
+        // definitely won't finish. Since we have a new update, let's mark it as
+        // suspended now, right before marking the incoming update. This has the
+        // effect of interrupting the current render and switching to the update.
+        // TODO: This happens to work when receiving an update during the render
+        // phase, because of the trick inside computeExpirationForFiber to
+        // subtract 1 from `renderExpirationTime` to move it into a
+        // separate bucket. But we should probably model it with an exception,
+        // using the same mechanism we use to force hydration of a subtree.
+        // TODO: This does not account for low pri updates that were already
+        // scheduled before the root started rendering. Need to track the next
+        // pending expiration time (perhaps by backtracking the return path) and
+        // then trigger a restart in the `renderDidSuspendDelayIfPossible` path.
+        markRootSuspendedAtTime(root, renderExpirationTime);
+      }
+    }
+    // Mark that the root has a pending update.
+    markRootUpdatedAtTime(root, expirationTime);
+  }
+
+  return root;
+}
+```

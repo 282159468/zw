@@ -8,8 +8,6 @@ title: ReactDOM.render
 ReactDOM.render(<App />, document.getElementById('root'));
 ```
 
-## 创建 FiberRoot
-
 src\packages\react-dom\src\client\ReactDOM.js
 
 ReactDOM 提供下面接口
@@ -325,6 +323,7 @@ function FiberNode(
   mode: TypeOfMode,
 ) {
   // Instance
+  // 实例的类型，函数组件、类组件等
   this.tag = tag;
   this.key = key;
   this.elementType = null;
@@ -407,17 +406,59 @@ export function initializeUpdateQueue<State>(fiber: Fiber): void {
 
 就是初始 fiber.updateQueue 值为一个简单的对象没有啥特别之处
 
+## fiberRoot-rootFiber 关系
+
+<img src="/images/fiberRoot-rootFiber.png">
+
+fiberRoot.current = rootFiber
+
+rootFiber.stateNode = fiberRoot
+
+legacy 初次渲染
+
+fiberRoot.tag = LegacyRoot = 0
+
+```js
+export type RootTag = 0 | 1 | 2;
+export const LegacyRoot = 0;
+export const BlockingRoot = 1;
+export const ConcurrentRoot = 2;
+```
+
+rootFiber.tag = HostRoot =0
+
+```js
+export const FunctionComponent = 0;
+export const ClassComponent = 1;
+export const IndeterminateComponent = 2; // Before we know whether it is function or class
+export const HostRoot = 3; // Root of a host tree. Could be nested inside another node.
+export const HostPortal = 4; // A subtree. Could be an entry point to a different renderer.
+export const HostComponent = 5;
+export const HostText = 6;
+export const Fragment = 7;
+export const Mode = 8;
+export const ContextConsumer = 9;
+export const ContextProvider = 10;
+export const ForwardRef = 11;
+export const Profiler = 12;
+export const SuspenseComponent = 13;
+export const MemoComponent = 14;
+export const SimpleMemoComponent = 15;
+export const LazyComponent = 16;
+export const IncompleteClassComponent = 17;
+export const DehydratedFragment = 18;
+export const SuspenseListComponent = 19;
+export const FundamentalComponent = 20;
+export const ScopeComponent = 21;
+export const Block = 22;
+```
+
 ## legacyCreateRootFromDOMContainer 小结
 
 以上一大堆仅仅是 render 中 legacyCreateRootFromDOMContainer 部分，主要作用
 
 - 创建 fiberRoot
 - 创建 rootFiber
-
-  rootFiber.current = fiberRoot
-
-  fiberRoot.stateNode = rootFiber
-
 - 初始化 rootFiber.updateQueue
 
 ## createRoot 大概调用栈
@@ -437,6 +478,9 @@ export function updateContainer(
   parentComponent: ?React$Component<any, any>,
   callback: ?Function,
 ): ExpirationTime {
+  // current = rootFiber.current = rootFiber
+  const current = container.current;
+  const currentTime = requestCurrentTimeForUpdate();
   // suspense相关的先不关注
   const suspenseConfig = requestCurrentSuspenseConfig();
   // 过期日期这个需要和后面串起来看
@@ -476,6 +520,8 @@ export function updateContainer(
 
 ## scheduleUpdateOnFiber
 
+fiber 是 fiberRoot.current = rootFiber,这个时候的 rootFiber 还是光标司令,即 child = null 还没生成 fiber 树
+
 ```js
 export function scheduleUpdateOnFiber(
   fiber: Fiber,
@@ -505,6 +551,8 @@ export function scheduleUpdateOnFiber(
       (executionContext & (RenderContext | CommitContext)) === NoContext
     ) {
       // Register pending interactions on the root to avoid losing traced interaction data.
+      // 还没理解到干啥的
+
       schedulePendingInteractions(root, expirationTime);
 
       // This is a legacy edge case. The initial mount of a ReactDOM.render-ed
@@ -770,9 +818,9 @@ function renderRootSync(root, expirationTime) {
 }
 ```
 
-## sdfsdf
+## prepareFreshStack
 
-初次渲染可以理解为初始化 workInProgressRoot
+初次渲染可以理解为初始化 workInProgress
 
 ```js
 function prepareFreshStack(root, expirationTime) {

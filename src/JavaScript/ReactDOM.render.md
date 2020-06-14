@@ -428,6 +428,7 @@ export const ConcurrentRoot = 2;
 rootFiber.tag = HostRoot =0
 
 ```js
+// WorkTag
 export const FunctionComponent = 0;
 export const ClassComponent = 1;
 export const IndeterminateComponent = 2; // Before we know whether it is function or class
@@ -1008,7 +1009,7 @@ function performUnitOfWork(unitOfWork: Fiber): void {
   let next;
   if (enableProfilerTimer && (unitOfWork.mode & ProfileMode) !== NoMode) {
     startProfilerTimer(unitOfWork);
-    // 首次next为新生成的</App>fiber
+    // 首次next为新生成的<App/>fiber
     next = beginWork(current, unitOfWork, renderExpirationTime);
     stopProfilerTimerIfRunningAndRecordDelta(unitOfWork, true);
   } else {
@@ -1519,7 +1520,7 @@ function updateHostRoot(current, workInProgress, renderExpirationTime) {
       renderExpirationTime,
     );
   }
-  // 获取fiberRoot判断是否为SSR，否则开始处理</App>子节点
+  // 获取fiberRoot判断是否为SSR，否则开始处理<App/>子节点
   const root: FiberRoot = workInProgress.stateNode;
   if (root.hydrate && enterHydrationState(workInProgress)) {
     // If we don't have any current children this might be the first pass.
@@ -1549,7 +1550,7 @@ function updateHostRoot(current, workInProgress, renderExpirationTime) {
   } else {
     // Otherwise reset hydration state in case we aborted and resumed another
     // root.
-    // 初次渲染，其实就是在workInProgress
+    // 初次渲染，创建rootFiber的子节点即<App/>
     reconcileChildren(
       current,
       workInProgress,
@@ -1558,7 +1559,7 @@ function updateHostRoot(current, workInProgress, renderExpirationTime) {
     );
     resetHydrationState();
   }
-  // 首次返回</App>对应fiber
+  // 首次返回<App/>对应fiber
   return workInProgress.child;
 }
 ```
@@ -1716,6 +1717,7 @@ export function processUpdateQueue<State>(
       update = update.next;
       if (update === null) {
         pendingQueue = queue.shared.pending;
+        // 初次渲染更新后退出
         if (pendingQueue === null) {
           break;
         } else {
@@ -1786,7 +1788,7 @@ export function reconcileChildren(
     // let's throw it out.
 
     // 终于到生成fiberTree了
-    // 首次生成</App>对应的fiber
+    // 首次生成<App/>对应的fiber
     workInProgress.child = reconcileChildFibers(
       workInProgress,
       current.child,
@@ -2207,4 +2209,108 @@ export function createFiberFromTypeAndProps(
     return fiber;
   }
 }
+```
+
+## 小结 fiber 树的创建
+
+renderRootSync 调用 prepareFreshStack 初始化当前 workInProgress
+
+```js
+function prepareFreshStack() {
+  workInProgress = rootFiber;
+}
+```
+
+从 rootFiber 开始循环执行同步任务:workLoopSync
+
+```js
+function workLoopSync() {
+  // Already timed out, so perform work without checking if we need to yield.
+  while (workInProgress !== null) {
+    performUnitOfWork(workInProgress);
+  }
+}
+```
+
+开始按单元执行任务，beginWork 中
+
+```js
+function performUnitOfWork(unitOfWork: Fiber): void {
+  const current = unitOfWork.alternate;
+  let next;
+  if (enableProfilerTimer && (unitOfWork.mode & ProfileMode) !== NoMode) {
+    next = beginWork(current, unitOfWork, renderExpirationTime);
+  } else {
+    next = beginWork(current, unitOfWork, renderExpirationTime);
+  }
+
+  unitOfWork.memoizedProps = unitOfWork.pendingProps;
+  if (next === null) {
+    completeUnitOfWork(unitOfWork);
+  } else {
+    workInProgress = next;
+  }
+}
+```
+
+beginWork 里面包含很多类型组件的更新处理，
+
+首次 workInProgress 是 rootFiber 所以，匹配 HostRoot 执行 updateHostRoot 更新
+
+第二次进入 App 是 ClassComponent 类型，更新时会`nextChildren = instance.render();` 然后 workInProgress.child = chlidFiber
+
+```js
+function beginWork() {
+  switch (workInProgress.tag) {
+    case IndeterminateComponent: {
+    }
+    case LazyComponent: {
+    }
+    case FunctionComponent: {
+    }
+    case ClassComponent: {
+    }
+    case HostRoot:
+      return updateHostRoot(current, workInProgress, renderExpirationTime);
+    case HostComponent:
+    case HostText:
+    case SuspenseComponent:
+
+    case HostPortal:
+  }
+}
+```
+
+主要干两件事
+
+获取到更新的数据 nextState
+
+通过 createFiberFromElement(,,nextState.element)生成子 fiber
+
+```js
+function updateHostRoot(current, workInProgress, renderExpirationTime) {
+  const updateQueue = workInProgress.updateQueue;
+  processUpdateQueue(workInProgress, nextProps, null, renderExpirationTime);
+  const nextState = workInProgress.memoizedState;
+  const nextChildren = nextState.element;
+  const root: FiberRoot = workInProgress.stateNode;
+  workInProgress.child = createFiberFromElement(,,nextState.element)
+  return workInProgress.child;
+}
+```
+
+到这里 beginWork 执行结束，返回到 performUnitOfWork 中
+
+```js
+next = beginWork(current, unitOfWork, renderExpirationTime)
+// 其实
+next = workInProgress.child
+// 也就是
+next = createFiberFromElement(,,nextState.element)
+
+// 重新赋值
+ workInProgress = next;
+
+//  以child为workInProgress进入下一轮循环
+workLoopSync()
 ```

@@ -1,5 +1,5 @@
 ---
-title: ReactDOM.render
+title: react-render-phase
 ---
 
 # ReactDOM.render 初始渲染
@@ -2221,7 +2221,7 @@ function prepareFreshStack() {
 }
 ```
 
-从 rootFiber 开始循环执行同步任务:workLoopSync
+workLoopSync 从 rootFiber 开始循环执行同步任务:
 
 ```js
 function workLoopSync() {
@@ -2232,7 +2232,7 @@ function workLoopSync() {
 }
 ```
 
-开始按单元执行任务，beginWork 中
+开始按单元执行任务
 
 ```js
 function performUnitOfWork(unitOfWork: Fiber): void {
@@ -2257,7 +2257,7 @@ beginWork 里面包含很多类型组件的更新处理，
 
 首次 workInProgress 是 rootFiber 所以，匹配 HostRoot 执行 updateHostRoot 更新
 
-第二次进入 App 是 ClassComponent 类型，更新时会`nextChildren = instance.render();` 然后 workInProgress.child = chlidFiber
+第二次进入 App 是 ClassComponent 类型，更新时会调用组件的 render 函数`nextChildren = instance.render();` 然后 workInProgress.child = chlidFiber
 
 ```js
 function beginWork() {
@@ -2281,7 +2281,7 @@ function beginWork() {
 }
 ```
 
-主要干两件事
+updateHostRoot 主要干两件事，ClassComponent 等后面看组件更新过程时详细学习
 
 获取到更新的数据 nextState
 
@@ -2313,4 +2313,148 @@ next = createFiberFromElement(,,nextState.element)
 
 //  以child为workInProgress进入下一轮循环
 workLoopSync()
+```
+
+## completeUnitOfWork
+
+其中 completeWork 会根据 workInProgress 的类型
+
+如果是 HostComponent，就是 DOM 节点，会调用浏览器 DOM API 创建真实的节点并赋值给 workInProgress.stateNode
+
+```js
+function completeUnitOfWork(unitOfWork: Fiber): void {
+  // Attempt to complete the current unit of work, then move to the next
+  // sibling. If there are no more siblings, return to the parent fiber.
+  let completedWork = unitOfWork;
+  do {
+    // The current, flushed, state of this fiber is the alternate. Ideally
+    // nothing should rely on this, but relying on it here means that we don't
+    // need an additional field on the work in progress.
+    const current = completedWork.alternate;
+    const returnFiber = completedWork.return;
+
+    // Check if the work completed or if something threw.
+    if ((completedWork.effectTag & Incomplete) === NoEffect) {
+      setCurrentDebugFiberInDEV(completedWork);
+      let next;
+      if (
+        !enableProfilerTimer ||
+        (completedWork.mode & ProfileMode) === NoMode
+      ) {
+        next = completeWork(current, completedWork, renderExpirationTime);
+      } else {
+        startProfilerTimer(completedWork);
+        next = completeWork(current, completedWork, renderExpirationTime);
+        // Update render duration assuming we didn't error.
+        stopProfilerTimerIfRunningAndRecordDelta(completedWork, false);
+      }
+      resetCurrentDebugFiberInDEV();
+      resetChildExpirationTime(completedWork);
+
+      if (next !== null) {
+        // Completing this fiber spawned new work. Work on that next.
+        workInProgress = next;
+        return;
+      }
+
+      if (
+        returnFiber !== null &&
+        // Do not append effects to parents if a sibling failed to complete
+        (returnFiber.effectTag & Incomplete) === NoEffect
+      ) {
+        // Append all the effects of the subtree and this fiber onto the effect
+        // list of the parent. The completion order of the children affects the
+        // side-effect order.
+        if (returnFiber.firstEffect === null) {
+          returnFiber.firstEffect = completedWork.firstEffect;
+        }
+        if (completedWork.lastEffect !== null) {
+          if (returnFiber.lastEffect !== null) {
+            returnFiber.lastEffect.nextEffect = completedWork.firstEffect;
+          }
+          returnFiber.lastEffect = completedWork.lastEffect;
+        }
+
+        // If this fiber had side-effects, we append it AFTER the children's
+        // side-effects. We can perform certain side-effects earlier if needed,
+        // by doing multiple passes over the effect list. We don't want to
+        // schedule our own side-effect on our own list because if end up
+        // reusing children we'll schedule this effect onto itself since we're
+        // at the end.
+        const effectTag = completedWork.effectTag;
+
+        // Skip both NoWork and PerformedWork tags when creating the effect
+        // list. PerformedWork effect is read by React DevTools but shouldn't be
+        // committed.
+        if (effectTag > PerformedWork) {
+          if (returnFiber.lastEffect !== null) {
+            returnFiber.lastEffect.nextEffect = completedWork;
+          } else {
+            returnFiber.firstEffect = completedWork;
+          }
+          returnFiber.lastEffect = completedWork;
+        }
+      }
+    } else {
+      // This fiber did not complete because something threw. Pop values off
+      // the stack without entering the complete phase. If this is a boundary,
+      // capture values if possible.
+      const next = unwindWork(completedWork, renderExpirationTime);
+
+      // Because this fiber did not complete, don't reset its expiration time.
+
+      if (
+        enableProfilerTimer &&
+        (completedWork.mode & ProfileMode) !== NoMode
+      ) {
+        // Record the render duration for the fiber that errored.
+        stopProfilerTimerIfRunningAndRecordDelta(completedWork, false);
+
+        // Include the time spent working on failed children before continuing.
+        let actualDuration = completedWork.actualDuration;
+        let child = completedWork.child;
+        while (child !== null) {
+          actualDuration += child.actualDuration;
+          child = child.sibling;
+        }
+        completedWork.actualDuration = actualDuration;
+      }
+
+      if (next !== null) {
+        // If completing this work spawned new work, do that next. We'll come
+        // back here again.
+        // Since we're restarting, remove anything that is not a host effect
+        // from the effect tag.
+        next.effectTag &= HostEffectMask;
+        workInProgress = next;
+        return;
+      }
+
+      if (returnFiber !== null) {
+        // Mark the parent fiber as incomplete and clear its effect list.
+        returnFiber.firstEffect = returnFiber.lastEffect = null;
+        returnFiber.effectTag |= Incomplete;
+      }
+    }
+
+    const siblingFiber = completedWork.sibling;
+    // 处理兄弟节点，workLoopSync进入下一次循环
+    if (siblingFiber !== null) {
+      // If there is more work to do in this returnFiber, do that next.
+      workInProgress = siblingFiber;
+      return;
+    }
+    // Otherwise, return to the parent
+    // 没有兄弟节点返回父级，workLoopSync进入下一次循环
+    completedWork = returnFiber;
+    // Update the next thing we're working on in case something throws.
+    workInProgress = completedWork;
+    //
+  } while (completedWork !== null);
+
+  // We've reached the root.
+  if (workInProgressRootExitStatus === RootIncomplete) {
+    workInProgressRootExitStatus = RootCompleted;
+  }
+}
 ```

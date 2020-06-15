@@ -1,5 +1,5 @@
 ---
-title: React 细节
+title: React specific
 ---
 
 ## 位运算
@@ -16,3 +16,23 @@ export const MAX_SIGNED_31_BIT_INT = 1073741823;
 https://medium.com/@justjavac/v8-internals-how-small-is-a-small-integer-ba5e17a3ae5f
 
 setTimeout 最大、最小执行时间
+
+## finally
+
+```js
+let currentPriorityLevel = 0;
+function eventHandler() {
+  console.log('eventHandler:currentPriorityLevel', currentPriorityLevel);
+}
+function foo(priorityLevel) {
+  var previousPriorityLevel = currentPriorityLevel;
+  currentPriorityLevel = priorityLevel;
+  try {
+    return eventHandler();
+  } finally {
+    console.log('finally');
+    currentPriorityLevel = previousPriorityLevel;
+  }
+}
+foo(1);
+```

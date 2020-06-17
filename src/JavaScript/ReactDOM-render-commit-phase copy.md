@@ -1,6 +1,5 @@
 ---
-title: ReactDOM.render commit阶段
-path: /ReactDOM.render-commit-phase
+title: React首次渲染commit阶段
 ---
 
 # 优先级等级

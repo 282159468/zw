@@ -1,5 +1,5 @@
 ---
-title: react-render-phase
+title: React首次渲染render阶段
 ---
 
 # ReactDOM.render 初始渲染

@@ -10,6 +10,10 @@ ReactDOM.render(<App />, document.getElementById('root'));
 
 src\packages\react-dom\src\client\ReactDOM.js
 
+丑的掉渣的流程图
+
+<img src="/images/react-dom-first-render-diagram.png">
+
 ReactDOM 提供下面接口
 
 ```js

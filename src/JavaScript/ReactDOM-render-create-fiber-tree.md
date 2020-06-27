@@ -63,7 +63,48 @@ function performUnitOfWork(unitOfWork: Fiber): void {
 
 beginWork 会实例化组件(new)，把实例赋值给 Fiber.stateNode；
 
-调用组件 render 函数，函数组件直接执行，获取到 ReactElment，然后 ReactElment.type 创建不同类型的 Fiber ，递归方式为从上到下深度优先
+调用组件 render 函数，函数组件直接执行，获取到 ReactElment，然后从外到内遍历 ReactElment 根据不同的 ReactElment.type 创建不同类型的 Fiber
+
+beginWork 另外一个作用是打 effectTag
+
+```js
+function placeSingleChild(newFiber: Fiber): Fiber {
+  // This is simpler for the single child case. We only need to do a
+  // placement for inserting new children.
+  if (shouldTrackSideEffects && newFiber.alternate === null) {
+    newFiber.effectTag = Placement;
+  }
+  return newFiber;
+}
+
+workInProgress.effectTag |= PerformedWork;
+```
+
+### 类组件生命周期
+
+```js
+let instance = workInProgress.stateNode;
+if (instance === null) {
+  instance = new ctor(props, context);
+  ctor.getDerivedStateFromProps(nextProps, prevState);
+  // In order to support react-lifecycles-compat polyfilled components,
+  // Unsafe lifecycles should not be invoked for components using the new APIs.
+  // 使用新周期就不会执行旧的生命周期
+  if (
+    typeof ctor.getDerivedStateFromProps !== 'function' &&
+    typeof instance.getSnapshotBeforeUpdate !== 'function' &&
+    (typeof instance.UNSAFE_componentWillMount === 'function' ||
+      typeof instance.componentWillMount === 'function')
+  ) {
+    componentWillMount(workInProgress, instance);
+  }
+  workInProgress.stateNode = instance;
+}
+// 最后执行render函数获取Element创建子Fiber
+const next = instance.render();
+```
+
+## JSX 示例
 
 ```jsx | pure
 <div>
@@ -76,7 +117,7 @@ beginWork 会实例化组件(new)，把实例赋值给 Fiber.stateNode；
 ```
 
 1.  beginWork 创建 DivFiber
-2.  beginWork 创建 S1Fiber，S2Fiber，S3Fiber 三个 Fiber
+2.  beginWork 创建 S1Fiber，S2Fiber，S3Fiber 三个 Fiber，Element 的 props 是{children:[]}
 
     DivFiber.child = S1Fiber
 
@@ -117,7 +158,7 @@ function beginWork() {
 
 ## completeWork 阶段
 
-completeWork 以从下到上的方式递归，创建 DOM 节点，给节点添加内容，处理 style、dangerouslySetInnerHTML、Event 等任务
+completeWork 以从内到外的方式递归，创建 DOM 节点，给节点添加内容，处理 style、dangerouslySetInnerHTML、Event 等任务
 
 > React 中 DOM 添加内容使用的是 textContent，innerText,innerHTML 的区别，其中需要处理一些特殊情况
 
@@ -180,6 +221,34 @@ function completeUnitOfWork() {
       workInProgress = next;
       return;
     }
+
+    // 处理副作用
+    if (
+      returnFiber !== null &&
+      (returnFiber.effectTag & Incomplete) === NoEffect
+    ) {
+      if (returnFiber.firstEffect === null) {
+        returnFiber.firstEffect = completedWork.firstEffect;
+      }
+      if (completedWork.lastEffect !== null) {
+        if (returnFiber.lastEffect !== null) {
+          returnFiber.lastEffect.nextEffect = completedWork.firstEffect;
+        }
+        returnFiber.lastEffect = completedWork.lastEffect;
+      }
+
+      const effectTag = completedWork.effectTag;
+
+      if (effectTag > PerformedWork) {
+        if (returnFiber.lastEffect !== null) {
+          returnFiber.lastEffect.nextEffect = completedWork;
+        } else {
+          returnFiber.firstEffect = completedWork;
+        }
+        returnFiber.lastEffect = completedWork;
+      }
+    }
+
     // 没有子节点，接着处理兄弟节点
     if (siblingFiber !== null) {
       workInProgress = siblingFiber;
@@ -192,6 +261,15 @@ function completeUnitOfWork() {
   } while (completedWork !== null);
 }
 ```
+
+## 总结写在这
+
+- 主要分为 beginWork、completeWork
+- beginWork 从 RootFiber 开始从上到下的路径创建 Fiber 节点，当该路径没有子节点时会转到 completeWork
+- completeWork 通过 sibling、return 从下到上路径根据 Fiber 完成节点的 stateNode，即创建完成 DOM 事件、样式、内容等
+- completeWork 递归到 sibling 兄弟节点时会转到 beginWork 继续创建 Fiber 节点
+- completeWork 一直递归（return）到 RootFiber 层时完成创建
+- 创建完成后的 Fiber Tree 指向的是 RootFiber.alternate
 
 ## 另一个示例
 
@@ -256,6 +334,7 @@ function workLoopSync() {
 
 // 开始执行单元任务
 function performUnitOfWork(unitOfWork: Fiber): void {
+  //
   const current = unitOfWork.alternate;
   let next;
   if (enableProfilerTimer && (unitOfWork.mode & ProfileMode) !== NoMode) {
@@ -305,6 +384,7 @@ function completeUnitOfWork() {
       return;
     }
     // 没有兄弟节点返回父级，workLoopSync进入下一次循环
+    // 直到RootFiber.return = null退出循环
     completedWork = returnFiber;
     // Update the next thing we're working on in case something throws.
     workInProgress = completedWork;
@@ -312,9 +392,7 @@ function completeUnitOfWork() {
 }
 ```
 
-## 第一阶段
-
-执行 ReactDOM.render 开始创建 Fiber 树，从上 RootFiber 到下开始创建 Fiber
+入口执行 ReactDOM.render 开始创建 Fiber 树，从上 RootFiber 到下开始创建 Fiber
 
 ## 1
 
@@ -381,7 +459,7 @@ function reconcileChildrenArray(returnFiber) {
 }
 // spanFiber就是resultingFirstChild
 // 这里就可以看出child是指向第一个子节点
-// 然后遍历的时候通过sibling处理所有兄弟节点
+// 然后递归的时候通过sibling处理所有兄弟节点
 const spanFiber = {
   type: `span`,
   pendingProps: { children: 0 },
@@ -425,7 +503,7 @@ const appendAllChildren = function(
     }
     // 设置兄弟的父节点
     node.sibling.return = node.return;
-    // 继续遍历兄弟节点
+    // 继续递归兄弟节点
     node = node.sibling;
   }
 };

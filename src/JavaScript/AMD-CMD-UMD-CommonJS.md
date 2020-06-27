@@ -1,5 +1,5 @@
 ---
-title: 理解AMD CMD UMD Commonjs
+title: AMD/CMD/UMD/Commonjs
 ---
 
 # 理解 AMD CMD UMD Commonjs
@@ -44,7 +44,7 @@ module.exports = {
 
 ## AMD
 
-equireJS 实现的 AMD 规范
+RequireJS 实现的 AMD 规范
 
 ```js
 // 常用的模块声明的形式
@@ -62,7 +62,7 @@ define(['./cart', './inventory'], function(cart, inventory) {
 
 ## CMD
 
-通用模块定义，是淘宝 seaJS 实现的 CMD 规范
+通用模块定义，是淘宝 seaJS 推广实践过程中产生的
 
 CMD 的模块定义支持 AMD 和 CommonJS 两种形式，难怪叫通用模块定义
 
@@ -124,3 +124,5 @@ CMD 会顺序加载 mod1、mod2，但不会立即执行，等执行到`require('
 ## UMD
 
 兼容大礼包
+
+https://juejin.im/post/5a2e5f0851882575d42f5609

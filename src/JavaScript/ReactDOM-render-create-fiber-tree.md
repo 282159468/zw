@@ -13,8 +13,9 @@ function ReactDOM_render() {
   prepareFreshStack();
 }
 
-function prepareFreshStack() {
-  workInProgress = createFiber();
+// 根据RootFiber创建workInProgress
+function prepareFreshStack(root: FiberRoot) {
+  workInProgress = createWorkInProgress(root.current, null);
   // current = RootFiber
   // 互为替身，后续创建的fiber节点等等都是挂在current.alternate
   // 如果最终完成更新会用alternate替换current
@@ -43,6 +44,10 @@ function workLoopSync() {
 
 ```js
 function performUnitOfWork(unitOfWork: Fiber): void {
+  // 获取Fiber当前状态，现阶段看到的用处是，用来确定effectTag类型
+  // 第一次循环是RootFiberClone.alternate = RootFiber
+  // 从第二次开始Fiber的alternate都为空
+  // 下面placeSingleChild中的shouldTrackSideEffects === !!current
   const current = unitOfWork.alternate;
   let next;
   if (enableProfilerTimer && (unitOfWork.mode & ProfileMode) !== NoMode) {
@@ -67,10 +72,12 @@ beginWork 会实例化组件(new)，把实例赋值给 Fiber.stateNode；
 
 beginWork 另外一个作用是打 effectTag
 
+首先是 RootFiber 创建 AppFiber 时，current = RootFiber.alternate 是有值的，所以 shouldTrackSideEffects === true
+
+即：AppFiber.effectTag = Placement = 2
+
 ```js
 function placeSingleChild(newFiber: Fiber): Fiber {
-  // This is simpler for the single child case. We only need to do a
-  // placement for inserting new children.
   if (shouldTrackSideEffects && newFiber.alternate === null) {
     newFiber.effectTag = Placement;
   }
@@ -262,13 +269,14 @@ function completeUnitOfWork() {
 }
 ```
 
-## 总结写在这
+## 总结
 
 - 主要分为 beginWork、completeWork
-- beginWork 从 RootFiber 开始从上到下的路径创建 Fiber 节点，当该路径没有子节点时会转到 completeWork
-- completeWork 通过 sibling、return 从下到上路径根据 Fiber 完成节点的 stateNode，即创建完成 DOM 事件、样式、内容等
-- completeWork 递归到 sibling 兄弟节点时会转到 beginWork 继续创建 Fiber 节点
-- completeWork 一直递归（return）到 RootFiber 层时完成创建
+- 通过`<App/>`获取到整个应用 React Element
+- beginWork 由 RootFiber 开始，根据 Element 从上到下创建 Fiber 节点，当某子节点没有子节点时转到 completeWork
+- completeWork 会初始化 Fiber.stateNode 属性，即创建完成 DOM 事件、样式、内容等
+- 如果当前节点有 siblingFiber 会转到 beginWork(siblingFiber) 继续创建该分支 Fiber 节点
+- 反之通过 returnFiber 继续 completeWork，一直递归到 RootFiber 完成创建
 - 创建完成后的 Fiber Tree 指向的是 RootFiber.alternate
 
 ## 另一个示例

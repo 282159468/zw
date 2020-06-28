@@ -40,7 +40,7 @@ function commitRoot(root) {
 
 ```js
 let nextEffect = null;
-function commitRoot(root: FiberRoot) {
+function commitRootImpl(root: FiberRoot) {
   const finishedWork = root.finishedWork;
   const firstEffect = finishedWork.firstEffect;
   nextEffect = firstEffect;

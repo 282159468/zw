@@ -70,11 +70,13 @@ beginWork 会实例化组件(new)，把实例赋值给 Fiber.stateNode；
 
 调用组件 render 函数，函数组件直接执行，获取到 ReactElment，然后从外到内遍历 ReactElment 根据不同的 ReactElment.type 创建不同类型的 Fiber
 
-beginWork 另外一个作用是打 effectTag
+beginWork 另外一个作用是通过函数 placeSingleChild 打 effectTag，其中的 shouldTrackSideEffects 由`workInProgress.alternate`是否有值决定。
 
-首先是 RootFiber 创建 AppFiber 时，current = RootFiber.alternate 是有值的，所以 shouldTrackSideEffects === true
+> 在 performUnitOfWork 中`const current = unitOfWork.alternate;`
 
-即：AppFiber.effectTag = Placement = 2
+而在首次渲染时只有 RootFiber.alternate 有值，所以 AppFiber.effectTag = Placement = 2
+
+注：因为是首次渲染都是由 placeSingleChild 来打标记，更新渲染时会有其他形式的标记
 
 ```js
 function placeSingleChild(newFiber: Fiber): Fiber {
@@ -84,6 +86,11 @@ function placeSingleChild(newFiber: Fiber): Fiber {
   return newFiber;
 }
 
+// 如果是类组件且componentDidMount，需要加上Update(4)
+if (typeof instance.componentDidMount === 'function') {
+  workInProgress.effectTag |= Update;
+}
+// 统一加上1
 workInProgress.effectTag |= PerformedWork;
 ```
 

@@ -54,9 +54,9 @@ function commitRootImpl(root: FiberRoot) {
 }
 ```
 
-## 提交改变/Mutation
+## 提交改变前副作用
 
-DOM 节点的增、删、改
+通过判断 effectTag 是否包含`Snapshot`副作用，有则递归执行类组件的 getsnaphotbeforeUpdate
 
 ```js
 function commitBeforeMutationEffects() {
@@ -71,6 +71,70 @@ function commitBeforeMutationEffects() {
     nextEffect = nextEffect.nextEffect;
   }
 }
+```
 
-function commitMutationEffects() {}
+## 提交改变/Mutation
+
+DOM 节点的增、删、改
+
+> primaryEffectTag = effectTag & (Placement | Update | Deletion | Hydrating)
+
+这句意思是 effectTag 包含哪些副作用，比如在创建 Fiber 树的时候有以下代码
+
+```js
+if (typeof instance.componentDidMount === 'function') {
+  workInProgress.effectTag |= Update;
+}
+```
+
+这里 effectTag 就添加了 Update 副作用，而前一步`Snapshot`副作用判断为
+
+```js
+if ((effectTag & Snapshot) !== NoEffect) {
+  commitBeforeMutationEffects();
+}
+```
+
+```js
+function commitMutationEffects(root: FiberRoot, renderPriorityLevel) {
+  while (nextEffect !== null) {
+    const effectTag = nextEffect.effectTag;
+    const primaryEffectTag =
+      effectTag & (Placement | Update | Deletion | Hydrating);
+    switch (primaryEffectTag) {
+      case Placement: {
+        commitPlacement(nextEffect);
+        nextEffect.effectTag &= ~Placement;
+        break;
+      }
+      case PlacementAndUpdate: {
+        commitPlacement(nextEffect);
+        nextEffect.effectTag &= ~Placement;
+        const current = nextEffect.alternate;
+        commitWork(current, nextEffect);
+        break;
+      }
+      case Hydrating: {
+        nextEffect.effectTag &= ~Hydrating;
+        break;
+      }
+      case HydratingAndUpdate: {
+        nextEffect.effectTag &= ~Hydrating;
+        const current = nextEffect.alternate;
+        commitWork(current, nextEffect);
+        break;
+      }
+      case Update: {
+        const current = nextEffect.alternate;
+        commitWork(current, nextEffect);
+        break;
+      }
+      case Deletion: {
+        commitDeletion(root, nextEffect, renderPriorityLevel);
+        break;
+      }
+    }
+    nextEffect = nextEffect.nextEffect;
+  }
+}
 ```

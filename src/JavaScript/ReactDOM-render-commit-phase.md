@@ -47,14 +47,16 @@ function commitRootImpl(root: FiberRoot) {
 
   // 递归执行类组件的getsnaphotbeforeUpdate
   do {
-    commitBeforeMutationEffects();
+    if ((effectTag & Snapshot) !== NoEffect) {
+      commitBeforeMutationEffects();
+    }
   } while (nextEffect !== null);
   // 重置 nextEffect
   nextEffect = firstEffect;
 }
 ```
 
-## 提交改变前副作用
+## 提交改变前的副作用
 
 通过判断 effectTag 是否包含`Snapshot`副作用，有则递归执行类组件的 getsnaphotbeforeUpdate
 
@@ -87,13 +89,7 @@ if (typeof instance.componentDidMount === 'function') {
 }
 ```
 
-这里 effectTag 就添加了 Update 副作用，而前一步`Snapshot`副作用判断为
-
-```js
-if ((effectTag & Snapshot) !== NoEffect) {
-  commitBeforeMutationEffects();
-}
-```
+根据 effectTag 匹配对应的处理
 
 ```js
 function commitMutationEffects(root: FiberRoot, renderPriorityLevel) {

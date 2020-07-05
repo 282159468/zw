@@ -23,7 +23,7 @@ export const PerformedWork = /*            */ 1;
 // You can change the rest (and add more).
 export const Placement = /*                */ 2;
 export const Update = /*                   */ 4;
-export const PlacementAndUpdate = /*       */ 0b00000000000110;
+export const PlacementAndUpdate = /*       */ 6;
 export const Deletion = /*                 */ 0b00000000001000;
 export const ContentReset = /*             */ 0b00000000010000;
 export const Callback = /*                 */ 0b00000000100000;

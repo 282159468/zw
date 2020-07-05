@@ -4,7 +4,9 @@ title: React Effect 更新链
 
 ## Fiber 中的副作用
 
-## 更新副作用链
+## 创建 Effect 链
+
+创建 Effect 链是在 completeWork 过程中进行的，所以为深度优先的遍历，从最内层开始创建 effect 链
 
 ```js
 function completeUnitOfWork(unitOfWork: Fiber): void {
@@ -12,24 +14,9 @@ function completeUnitOfWork(unitOfWork: Fiber): void {
   do {
     const current = completedWork.alternate;
     const returnFiber = completedWork.return;
-
     // 副作用中不包括异常
     if ((completedWork.effectTag & Incomplete) === NoEffect) {
-      setCurrentDebugFiberInDEV(completedWork);
-      let next;
-      if (
-        !enableProfilerTimer ||
-        (completedWork.mode & ProfileMode) === NoMode
-      ) {
-        next = completeWork(current, completedWork, renderExpirationTime);
-      } else {
-        startProfilerTimer(completedWork);
-        next = completeWork(current, completedWork, renderExpirationTime);
-        stopProfilerTimerIfRunningAndRecordDelta(completedWork, false);
-      }
-      resetCurrentDebugFiberInDEV();
-      resetChildExpirationTime(completedWork);
-
+      next = completeWork(current, completedWork, renderExpirationTime);
       if (next !== null) {
         workInProgress = next;
         return;
@@ -40,25 +27,28 @@ function completeUnitOfWork(unitOfWork: Fiber): void {
         // 如果父节点有异常不会处理了
         (returnFiber.effectTag & Incomplete) === NoEffect
       ) {
-        // 处理子节点更新
-        // 如果父节点副作用还是空的，第一个吃爬海的副作用
-        // completedWork的子节点有更新并挂在completedWork.firstEffect上的，
-        // 但是completedWork自己没有更新，所以把子节点的更新再往上挂到returnFiber.firstEffect上
+        // 自身子节点有更新
+        // 如果completedWork的子节点有更新，这些更新是挂在completedWork.firstEffect上的，
+        // returnFiber.firstEffect就等于completedWork.firstEffect
         if (returnFiber.firstEffect === null) {
           returnFiber.firstEffect = completedWork.firstEffect;
         }
+        // 非最内层时 completedWork.lastEffect可能有值
         if (completedWork.lastEffect !== null) {
+          // 非第一次，链接尾首
           if (returnFiber.lastEffect !== null) {
             returnFiber.lastEffect.nextEffect = completedWork.firstEffect;
           }
+          // 第一次初始化父节点lastEffect等当前节点completedWork.lastEffect
           returnFiber.lastEffect = completedWork.lastEffect;
         }
 
-        // 处理自身更新
-        // 这里是completedWork自己有更新就把自己挂到父节点的returnFiber.firstEffect上
+        // 自身有更新
         const effectTag = completedWork.effectTag;
         if (effectTag > PerformedWork) {
+          // lastEffect不为空，firstEffect肯定也不空
           if (returnFiber.lastEffect !== null) {
+            // 处理同级的更新链 prevCompletedWork.nextEffect = completedWork
             returnFiber.lastEffect.nextEffect = completedWork;
           } else {
             returnFiber.firstEffect = completedWork;
@@ -72,20 +62,12 @@ function completeUnitOfWork(unitOfWork: Fiber): void {
 
     const siblingFiber = completedWork.sibling;
     if (siblingFiber !== null) {
-      // If there is more work to do in this returnFiber, do that next.
       workInProgress = siblingFiber;
       return;
     }
-    // Otherwise, return to the parent
     completedWork = returnFiber;
-    // Update the next thing we're working on in case something throws.
     workInProgress = completedWork;
   } while (completedWork !== null);
-
-  // We've reached the root.
-  if (workInProgressRootExitStatus === RootIncomplete) {
-    workInProgressRootExitStatus = RootCompleted;
-  }
 }
 ```
 
@@ -135,48 +117,15 @@ const Foo = ({ color }) => {
 - p-fiber
 - span-fiber
 
-## 首次渲染更新链
+## 首次渲染 Effect 链
 
 打 effectTag 标记是根据 shouldTrackSideEffects 决定的，workInProgress.alternate 有值时 shouldTrackSideEffects 为 true， 首次渲染时只有 RootFiber.alternate 有值
 
 所以只有 RootFiber 的子节点 App-fiber.effectTag 大于 PerformedWork
 
-## 处理子节点更新
+因为只有 App-fiber.effectTag 自身有更新，所以只有 RootFiber.firstEffect=App-fiber，
 
-因为只有 App-fiber.effectTag 自身有更新，所以只有 RootFiber.firstEffect 有值，
-
-所以`returnFiber.firstEffect = completedWork.firstEffect;`这句在首次渲染时基本上是摆设
-
-```js
-if (returnFiber.firstEffect === null) {
-  // 一直在执行，一直都是null
-  returnFiber.firstEffect = completedWork.firstEffect;
-}
-// 完全的摆设因为lastEffect全是空的除了RootFiber
-if (completedWork.lastEffect !== null) {
-  if (returnFiber.lastEffect !== null) {
-    returnFiber.lastEffect.nextEffect = completedWork.firstEffect;
-  }
-  returnFiber.lastEffect = completedWork.lastEffect;
-}
-```
-
-### 处理自身更新
-
-```js
-const effectTag = completedWork.effectTag;
-if (effectTag > PerformedWork) {
-  // 父节点RootFiber.lastEffect肯定为空
-  if (returnFiber.lastEffect !== null) {
-    returnFiber.lastEffect.nextEffect = completedWork;
-  } else {
-    // RootFiber.firstEffect = App-fiber
-    returnFiber.firstEffect = completedWork;
-  }
-  // RootFiber.lastEffect = App-fiber
-  returnFiber.lastEffect = completedWork;
-}
-```
+其他 Fiber.firstEffect 都是 null
 
 小结：
 
@@ -184,7 +133,7 @@ if (effectTag > PerformedWork) {
 - 首次渲染只有 RootFiber.firstEffect 有值
 - 随后的 commit phase 就可以根据 RootFiber.firstEffect 进行真实 DOM 添加了
 
-## 二次更新链
+## 二次更新 Effect 链
 
 当 setState 更新 color 后
 
@@ -192,10 +141,18 @@ if (effectTag > PerformedWork) {
 const effectTag = completedWork.effectTag;
 if (effectTag > PerformedWork) {
   if (returnFiber.lastEffect !== null) {
+    // 假如元素是：<div><b/><i/></div>
+    // 第二次 div.lastEffect = b
+    // 第三次 b.nextEffect = c
     returnFiber.lastEffect.nextEffect = completedWork;
   } else {
+    // 第一次div.firstEffect = div.lastEffect = c
     returnFiber.firstEffect = completedWork;
   }
+  // 最后div.lastEffect = c
   returnFiber.lastEffect = completedWork;
 }
 ```
+
+- [ ] 更新时 Foo 的 effecTage = 1
+- [ ] i-fiber.nextEffect = p-fiber

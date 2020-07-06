@@ -134,3 +134,7 @@ function commitMutationEffects(root: FiberRoot, renderPriorityLevel) {
   }
 }
 ```
+
+## 自答题
+
+- [ ] 为什么`{ false &&</i> }`不会显示 false

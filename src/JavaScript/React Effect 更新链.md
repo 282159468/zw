@@ -81,20 +81,20 @@ export default class App extends PureComponent {
     super();
     this.state = {
       color: 'red',
-      cls: 'big',
+      size: 'big',
     };
   }
 
   componentDidMount() {
-    this.setState({ color: 'blue', cls: 'small' });
+    this.setState({ color: 'blue', size: 'small' });
   }
 
   render() {
-    const { color, cls } = this.state;
+    const { color, size } = this.state;
     return (
-      <div className={cls}>
-        {cls === 'big' && <b>cls=small</b>}
-        {cls === 'small' && <i>cls=small</i>}
+      <div className={size}>
+        {size === 'big' && <b>size=small</b>}
+        {size === 'small' && <i>size=small</i>}
         <Foo color={color} />
       </div>
     );
@@ -121,6 +121,15 @@ const Foo = ({ color }) => {
 
 打 effectTag 标记是根据 shouldTrackSideEffects 决定的，workInProgress.alternate 有值时 shouldTrackSideEffects 为 true， 首次渲染时只有 RootFiber.alternate 有值
 
+```js
+function placeSingleChild(newFiber: Fiber): Fiber {
+  if (shouldTrackSideEffects && newFiber.alternate === null) {
+    newFiber.effectTag = Placement;
+  }
+  return newFiber;
+}
+```
+
 所以只有 RootFiber 的子节点 App-fiber.effectTag 大于 PerformedWork
 
 因为只有 App-fiber.effectTag 自身有更新，所以只有 RootFiber.firstEffect=App-fiber，
@@ -135,24 +144,79 @@ const Foo = ({ color }) => {
 
 ## 二次更新 Effect 链
 
-当 setState 更新 color 后
-
 ```js
+if (returnFiber.firstEffect === null) {
+  returnFiber.firstEffect = completedWork.firstEffect;
+}
+/**
+ * 处理子节点有更新
+ * 当前节点不是叶子节点的情况，不是叶子节点completedWork.lastEffect才可能有值
+ */
+if (completedWork.lastEffect !== null) {
+  // 存在lastEffect情况链接尾首
+  if (returnFiber.lastEffect !== null) {
+    returnFiber.lastEffect.nextEffect = completedWork.firstEffect;
+  }
+  // 父级lastEffect指向当前层lastEffect
+  returnFiber.lastEffect = completedWork.lastEffect;
+}
+
+/**
+ * 自身有更新
+ * 把自身更新添加到上层
+ */
 const effectTag = completedWork.effectTag;
 if (effectTag > PerformedWork) {
   if (returnFiber.lastEffect !== null) {
-    // 假如元素是：<div><b/><i/></div>
-    // 第二次 div.lastEffect = b
-    // 第三次 b.nextEffect = c
     returnFiber.lastEffect.nextEffect = completedWork;
   } else {
-    // 第一次div.firstEffect = div.lastEffect = c
     returnFiber.firstEffect = completedWork;
   }
-  // 最后div.lastEffect = c
   returnFiber.lastEffect = completedWork;
 }
 ```
 
-- [ ] 更新时 Foo 的 effecTage = 1
+Effect 链多数在 complateWork 中完成更新，有一个例外，删除类型的副作用在 beginWork 调度子节点中处理
+
+```js
+function deleteChild(returnFiber: Fiber, childToDelete: Fiber): void {
+  if (!shouldTrackSideEffects) {
+    return;
+  }
+  const last = returnFiber.lastEffect;
+  if (last !== null) {
+    // 之前父节点的lastEffect.nextEffect指向该节点
+    last.nextEffect = childToDelete;
+    // 把要删除的节点更新到父节点lastEffect上
+    returnFiber.lastEffect = childToDelete;
+  } else {
+    // 跟上面套路一样firstEffect->N1Fiber->nextEffect->N2Fiber->...->lastEffect
+    returnFiber.firstEffect = returnFiber.lastEffect = childToDelete;
+  }
+  childToDelete.nextEffect = null;
+  // 这里并没有真正删除Fiber节点，只是打标记
+  childToDelete.effectTag = Deletion;
+}
+```
+
+### completedWork = i-fiber
+
+二次更新 alternate 树上没有 b-fiber 了，所以第一个循环处理的就是 i-fiber
+
+> div-fiber.lastEffect = div-fiber.firstEffect = b-fiber
+
+**子节点更新**
+
+无（i-fiber 是叶子）
+
+**自身更新**
+
+div-fiber.lastEffect(b-fiber).nextEffect = completedWork;
+
+div-fiber.lastEffect = completedWork;
+
+## 自答题
+
+- [ ] 为什么更新时 Foo 的 effecTage = 1
 - [ ] i-fiber.nextEffect = p-fiber
+- [ ] 为什么`{ false &&</i> }`不会显示 false

@@ -5,10 +5,23 @@ title: React首次渲染文字版
 # React 首次渲染文字版
 
 ```jsx | pure
+// app.js
+class App extends React.PureComponent {
+  render() {
+    return <div>hello world</div>;
+  }
+}
+
 ReactDOM.render(<App />, document.getElementById('root'));
 ```
 
+这种标签语法称为 JSX，但是这种语法并不是 ES 标准的一部分，并不能直接在浏览器运行，早期的 JSX 是在浏览器端做编译的；现在基本上都是通过 babel 打包时编译为 ES 代码
+
 了解首次渲染之前，需要了解相关的几个概念
+
+- JSX
+- React Element
+- Fiber
 
 ## Fiber
 

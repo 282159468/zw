@@ -1,5 +1,5 @@
 ---
-title: React常见类型、常量
+title: React数据结构
 ---
 
 ## 副作用类型/SideEffectTag
@@ -24,7 +24,7 @@ export const PerformedWork = /*            */ 1;
 export const Placement = /*                */ 2;
 export const Update = /*                   */ 4;
 export const PlacementAndUpdate = /*       */ 6;
-export const Deletion = /*                 */ 0b00000000001000;
+export const Deletion = /*                 */ 8;
 export const ContentReset = /*             */ 0b00000000010000;
 export const Callback = /*                 */ 0b00000000100000;
 export const DidCapture = /*               */ 0b00000001000000;

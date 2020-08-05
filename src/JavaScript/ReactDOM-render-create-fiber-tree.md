@@ -174,7 +174,9 @@ function beginWork() {
 
 completeWork 以从内到外的方式递归，创建 DOM 节点，给节点添加内容，处理 style、dangerouslySetInnerHTML、Event 等任务
 
-> React 中 DOM 添加内容使用的是 textContent，innerText,innerHTML 的区别，其中需要处理一些特殊情况
+> React 中 DOM 添加文本内容使用的是 textContent 这个 API，textContent 并不会像 innerHTML 把内容解析为 HTML，这样性能高还可以防止 XSS，需要注意 innerText 和 textContent 的区别
+
+其中需要处理一些特殊情况，比如：
 
 - ReactDOM.createProtal()
 - input、textarea

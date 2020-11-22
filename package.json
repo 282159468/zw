@@ -16,27 +16,12 @@
   "bugs": {
     "url": "https://github.com/282159468/zw/issues"
   },
-  "gitHooks": {
-    "pre-commit": "lint-staged"
-  },
-  "lint-staged": {
-    "*.{js,jsx,less,md,json}": [
-      "prettier --write"
-    ],
-    "*.ts?(x)": [
-      "prettier --parser=typescript --write"
-    ]
-  },
   "dependencies": {
     "react": "^16.12.0"
   },
   "devDependencies": {
-    "@umijs/preset-react": "1.x",
-    "@umijs/test": "^3.0.5",
-    "dumi": "^1.0.26",
-    "father-build": "^1",
+    "dumi": "*",
     "lint-staged": "^10.0.7",
-    "prettier": "^1.19.1",
-    "yorkie": "^2.0.0"
+    "prettier": "^1.19.1"
   }
 }

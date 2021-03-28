@@ -1,5 +1,5 @@
 ---
-title: React数据结构
+title: React数据结构/类型
 ---
 
 ## 副作用类型/SideEffectTag

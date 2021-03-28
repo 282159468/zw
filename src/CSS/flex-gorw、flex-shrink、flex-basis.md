@@ -7,13 +7,22 @@ route: /flex-basis
 定义 flex 元素初始主轴尺寸，也可以理解为预期基础尺寸，初始值:auto
 优先级 max[min]-width>flex-basis>width，注意这里的 width 是针对 flex-direction: row 的情况
 
-<div>
-<div style={{display: 'flex',width: 700,height:100, background: '#eee'}}>
-    <div style={{width: 60, flex:1, minWidth:180, background: '#111'}}>1</div>
-    <div style={{width: 60, flexBasis:100, background: '#222'}}>2</div>
-    <div style={{width: 60, flexBasis:100, background: '#333'}}>3</div>
-</div>
-</div>
+```jsx
+import React from 'react';
+export default () => (
+  <div>
+    <div
+      style={{ display: 'flex', width: 700, height: 100, background: '#eee' }}
+    >
+      <div style={{ width: 60, flex: 1, minWidth: 180, background: '#111' }}>
+        1
+      </div>
+      <div style={{ width: 60, flexBasis: 100, background: '#222' }}>2</div>
+      <div style={{ width: 60, flexBasis: 100, background: '#333' }}>3</div>
+    </div>
+  </div>
+);
+```
 
 ## flex-basis 和 width 的关系
 
@@ -27,17 +36,22 @@ flex-basis 可伸缩，width 是定死的
 
 分摊剩余空间，或者说是分摊剩余空间的比例,初始值:0
 
-<div style={{ display: 'flex', width: 700, height: 100, background: '#eee' }}>
-  <div style={{ flexBasis: 100, flexGrow: 1, background: '#111' }}>
-    flex-grow:1
+```jsx
+import React from 'react';
+export default () => (
+  <div style={{ display: 'flex', width: 700, height: 100, background: '#eee' }}>
+    <div style={{ flexBasis: 100, flexGrow: 1, background: '#111' }}>
+      flex-grow:1
+    </div>
+    <div style={{ flexBasis: 100, flexGrow: 2, background: '#111' }}>
+      flex-grow:2
+    </div>
+    <div style={{ flexBasis: 100, flexGrow: 3, background: '#111' }}>
+      flex-grow:3
+    </div>
   </div>
-  <div style={{ flexBasis: 100, flexGrow: 2, background: '#111' }}>
-    flex-grow:2
-  </div>
-  <div style={{ flexBasis: 100, flexGrow: 3, background: '#111' }}>
-    flex-grow:3
-  </div>
-</div>
+);
+```
 
 flex 容器最宽度 700，flex items 初始化宽度之和为 300，所以剩余宽度为 400，这 400 被 flexGrow 之和 6，即 400 被分为 6 份
 
@@ -51,13 +65,20 @@ flex-grow:2 表示之分一份 400/6\* 2，所以实际宽度为 100 + 133.33 = 
 
 flex-shrink 和 flex-grow 类似，只是 flex-shrink 是当 flex items 的总初始宽度大于了容器时，每个 item 按照 flex-shrink 设置的比例进行收缩
 
-<div>
-<div style={{display: 'flex',width: 100, height:100, background: '#eee'}}>
-   <div style={{flexBasis: 100, flexShrink:1,  background: '#111'}}>A</div>
-    <div style={{flexBasis: 100, flexShrink:2,  background: '#111'}}>B</div>
-    <div style={{flexBasis: 100, flexShrink:3,  background: '#111'}}>C</div>
-</div>
-</div>
+```jsx
+import React from 'react';
+export default () => (
+  <div>
+    <div
+      style={{ display: 'flex', width: 100, height: 100, background: '#eee' }}
+    >
+      <div style={{ flexBasis: 100, flexShrink: 1, background: '#111' }}>A</div>
+      <div style={{ flexBasis: 100, flexShrink: 2, background: '#111' }}>B</div>
+      <div style={{ flexBasis: 100, flexShrink: 3, background: '#111' }}>C</div>
+    </div>
+  </div>
+);
+```
 
 容器总宽度 100，flex items 总宽度 300，所以需要收缩总宽度 200
 

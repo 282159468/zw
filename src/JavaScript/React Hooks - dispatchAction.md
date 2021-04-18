@@ -40,7 +40,7 @@ if(fiber.expirationTime === NoWork &&
 
 这里反复调试了很多次
 
-**这段代码在 firefox 中执行是符合预期的**
+~~**这段代码在 firefox 中执行是符合预期的**~~
 
 怀疑是 chrome 安装了 React dev Tools 插件，然后在隐藏模式下或者删除插件测试问题依旧
 
@@ -56,17 +56,11 @@ function dispatchAction<S, A>(
   queue: UpdateQueue<S, A>,
   action: A,
 ) {
-  const currentTime = requestCurrentTimeForUpdate();
-  const suspenseConfig = requestCurrentSuspenseConfig();
-  const expirationTime = computeExpirationForFiber(
-    currentTime,
-    fiber,
-    suspenseConfig,
-  );
+  const eventTime = requestEventTime();
+  const lane = requestUpdateLane(fiber);
 
   const update: Update<S, A> = {
-    expirationTime,
-    suspenseConfig,
+    lane,
     action,
     eagerReducer: null,
     eagerState: null,
@@ -93,12 +87,11 @@ function dispatchAction<S, A>(
     // queue -> linked list of updates. After this render pass, we'll restart
     // and apply the stashed updates on top of the work-in-progress hook.
     didScheduleRenderPhaseUpdateDuringThisPass = didScheduleRenderPhaseUpdate = true;
-    update.expirationTime = renderExpirationTime;
   } else {
     // 第二次点击没有进入这个分支
     if (
-      fiber.expirationTime === NoWork &&
-      (alternate === null || alternate.expirationTime === NoWork)
+      fiber.lanes === NoLanes &&
+      (alternate === null || alternate.lanes === NoLanes)
     ) {
       // The queue is currently empty, which means we can eagerly compute the
       // next state before entering the render phase. If the new state is the
@@ -136,7 +129,11 @@ function dispatchAction<S, A>(
         }
       }
     }
-    scheduleUpdateOnFiber(fiber, expirationTime);
+    scheduleUpdateOnFiber(fiber, lane, eventTime);
+  }
+
+  if (enableSchedulingProfiler) {
+    markStateUpdateScheduled(fiber, lane);
   }
 }
 ```
@@ -170,8 +167,7 @@ function mountState<S>(
 
 调试了很多次了没有结果，后面又切到 React17 测试问题依旧，
 
-
-另外类组件继承PureComponent的表现也符合预期
+另外类组件继承 PureComponent 的表现也符合预期
 
 ```jsx
 import React from 'react';
@@ -192,4 +188,46 @@ export default class extends React.PureComponent {
 
 发了知乎提问碰下运气https://www.zhihu.com/question/451642077
 
-- [ ] 没有解决
+**更新于 2021-4-18**
+
+firefox 执行结果是和 chrome 一致的，firefox 中 console.log()输出相同的内容，次数会标记的右边，之前没有看到
+
+强大的乱乎，原来 React 官网有这种场景的介绍，怪自己之前没有仔细看。
+
+<blockquote>
+
+## 跳过 state 更新
+
+调用 State Hook 的更新函数并传入当前的 state 时，React 将跳过子组件的渲染及 effect 的执行。（React 使用 Object.is 比较算法 来比较 state。）
+
+需要注意的是，React 可能仍需要在跳过渲染前渲染该组件。不过由于 React 不会对组件树的“深层”节点进行不必要的渲染，所以大可不必担心。如果你在渲染期间执行了高开销的计算，则可以使用 useMemo 来进行优化。
+
+https://reactjs.org/docs/hooks-reference.html#bailing-out-of-a-state-update
+
+</blockquote>
+
+虽然文档中介绍了产生这个现象的原因"React 可能仍需要在跳过渲染前渲染该组件"，但 React 这样设计的目的是什么呢？
+
+然后在这个 issue 中 React 成员提到，再次执行的原因是为了确保跳过更新是安全的
+
+<blockquote>
+This issue doesn't look like a "bug" so much as a question for clarification? 😄
+
+The next paragraph below the section of the docs you referenced says this:
+
+Note that React may still need to render that specific component again before bailing out. That shouldn’t be a concern because React won’t unnecessarily go “deeper” into the tree.
+
+React bails out early when it knows it's safe to. In some cases, it needs to do a little more work to be sure that it's safe to bail out.
+
+The reasons for why this is can't be explained without going fairly deep into the current implementation details- which probably wouldn't be that useful and they're likely to change in an upcoming release as we continue working on new APIs like concurrent mode and suspense.
+
+The good news is, as the docs mention, the amount of additional work React does in either case should be small!
+
+https://github.com/facebook/react/issues/17672
+
+</blockquote>
+
+**end 更新于 2021-4-18**
+
+- [x] 基本解决
+- [ ] 如果不再次执行组件函数会引起什么样的问题

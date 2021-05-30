@@ -129,13 +129,28 @@ js 数组内置了迭代器，可以 for of 遍历，普通对象除非手动实
 
 ## getOwnPropertyNames,getOwnPropertyDescriptors,getOwnPropertySymbols
 
-三个 `getOwnProperty`关键点为`Own`，只要是自己属性不管`enumberable:false`也会返回，同理原型链上的都不包含
+三个 `getOwnProperty`关键点在强调**自有**(`Own`)，只要是自己的即使`enumberable:false`也会返回，反之原型链上的都不返回
 
 - Names 不包括 Symbol 属性
 - Descriptors 只要是自己的 descriptor，包括 Symbol 属性
+  getOwnPropertyDescriptors 不是只返回由 Object.defineProperty 声明的属性，且返回的是描述符，不是对象的 keys
+
+  ```js
+  var a = { b: 1 };
+  Object.getOwnPropertyDescriptors(a);
+  var res = {
+    b: {
+      value: 3,
+      writable: true,
+      enumerable: true,
+      configurable: true,
+    },
+  };
+  ```
+
 - Symbols 只包括 Symbol 属性
 
-三个方法会包括 enumberable:false
+**三个方法会包括 enumberable:false**
 
 ## Reflect.ownKeys
 

@@ -6,7 +6,7 @@
   "main": "index.js",
   "scripts": {
     "doc": "dumi dev",
-    "build:doc": "dumi build",
+    "build": "dumi build",
     "deploy": "gh-pages -d dist"
   },
   "repository": {

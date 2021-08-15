@@ -1,0 +1,1 @@
+console.log("bar\u5f00\u59cb\u6267\u884c");import{foo}from"./foo.js";console.log("foo=",foo);export function bar(){console.log("bar()\u8c03\u7528\u5b8c\u6bd5")}console.log("bar\u7ed3\u675f\u6267\u884c");

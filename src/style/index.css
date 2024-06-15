@@ -1,0 +1,19 @@
+body {
+  font-size: 14px;
+}
+code {
+  padding: 2px 5px;
+  color: #d56161;
+  background: #f0f4f8;
+  border-radius: 2px;
+}
+
+blockquote {
+  margin: 16px 0;
+  font-size: inherit;
+  padding: 0 15px;
+  color: #5c5c5c;
+  background-color: #f0f0f0;
+  border-left: 4px solid #d6d6d6;
+  padding: 3px 6px;
+}

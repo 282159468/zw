@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <h1>test CORS</h1>
+    <script>
+      function allow() {
+        var xhr = new XMLHttpRequest();
+        xhr.open("POST", "http://localhost:3002/cors");
+        xhr.setRequestHeader("Content-Type", "application/json");
+        xhr.send(JSON.stringify({ a: 2 }));
+      }
+      function disable() {
+        var xhr = new XMLHttpRequest();
+        xhr.open("DELETE", "http://localhost:3002/cors");
+        xhr.send();
+        xhr.addEventListener("load", function(e) {
+          console.log("load", xhr.status, xhr.responseText);
+        });
+        xhr.addEventListener("error", function(e) {
+          console.log("onerror", xhr.status, xhr.statusText);
+        });
+      }
+
+      function customHeaders() {
+        var xhr = new XMLHttpRequest();
+        xhr.open("POST", "http://localhost:3002/cors-getResponseHeader");
+        xhr.setRequestHeader("User-Name", "zw");
+        xhr.setRequestHeader("User-age", 35);
+        xhr.send();
+        xhr.addEventListener("load", function() {
+          console.log(xhr.responseText, xhr.getAllResponseHeaders());
+        });
+      } 
+ 
+      function withCredentials() {
+        var xhr = new XMLHttpRequest();
+        xhr.open("POST", "http://localhost:3002/cors-all-origin");
+        xhr.withCredentials = true;
+        xhr.send();
+        xhr.addEventListener("load", function() {
+          console.log(xhr.responseText, xhr.getAllResponseHeaders());
+        });
+      }
+
+      function simpleRequest() {
+        var xhr = new XMLHttpRequest();
+        xhr.open("POST", "http://localhost:3002/cors-simple-request");
+        xhr.send();
+        xhr.addEventListener("load", function() {
+          console.log(xhr.responseText);
+        });
+      }
+
+      simpleRequest();
+    </script>
+  </body>
+</html>

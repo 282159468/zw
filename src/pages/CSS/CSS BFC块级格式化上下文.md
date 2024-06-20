@@ -4,21 +4,34 @@ title: CSS BFC块级格式化上下文
 
 ## BFC 定义
 
-块级格式化上下文 Block Format Context，创建环境=>制约渲染=>不会影响
+全称是 "Block Formatting Context"（块级格式化上下文）。BFC 是一种独立的渲染区域，具有独立的布局特性，可以帮助我们控制元素的排版和清除浮动。了解和使用 BFC 可以解决许多常见的 CSS 布局问题。 
 
-块级格式化上下文创建一个虚拟的上下文环境，规定该环境下的元素按什么样规则渲染，创建的每个上下文环境是独立，一下环境下的元素不会影响其他环境的元素渲染
+[https://drafts.csswg.org/css-display/#block-formatting-context](https://drafts.csswg.org/css-display/#block-formatting-context)
 
-## 如何触发 BFC
+## 创建 BFC
 
 给元素定义以下属性就会触发 BFC
 
-- overflow:除 visible 的值
+- overflow:除 visible、clip 的值
 - float:除 none 的值
-- display:
-  - inline-block
-  - tabel-cell table-caption
-  - flex grid
-- position: absolute,fixed
+- display: flex、grid、inline-block、tabel-cell、table-caption
+- position: absolute、fixed
+- ...[https://developer.mozilla.org/zh-CN/docs/Web/CSS/CSS_display/Block_formatting_context](https://developer.mozilla.org/zh-CN/docs/Web/CSS/CSS_display/Block_formatting_context)
+
+**display: flow-root**
+display: flow-root 可以无副作用创建 BFC，解决之前`overflow: hidden`、`float: left`等创建 BFC 会产生副作用问题
+
+```tsx
+import React from 'react';
+export default () => (
+  <div>
+    flow-root创建BFC
+    <div style={{ border: `solid blue`, display: 'flow-root' }}>
+      <div style={{ width: 130, height: 20, float: 'left', background: '#ccc' }}></div>
+    </div>
+  </div>
+);
+```
 
 ## BFC 的布局规则
 
@@ -38,9 +51,7 @@ export default () => (
   <div>
     浮动元素造成高度消失
     <div style={{ border: `solid blue` }}>
-      <div
-        style={{ width: 130, height: 20, float: 'left', background: '#ccc' }}
-      ></div>
+      <div style={{ width: 130, height: 20, float: 'left', background: '#ccc' }}></div>
     </div>
   </div>
 );
@@ -52,9 +63,7 @@ export default () => (
   <div>
     利用“BFC 内的浮动元素也会参与高度计算”，触发BFC问题解决
     <div style={{ border: `solid blue`, overflow: 'hidden' }}>
-      <div
-        style={{ width: 130, height: 20, float: 'left', background: '#ccc' }}
-      ></div>
+      <div style={{ width: 130, height: 20, float: 'left', background: '#ccc' }}></div>
     </div>
   </div>
 );
@@ -68,9 +77,7 @@ export default () => (
 import React from 'react';
 export default () => (
   <div style={{ border: `solid blue`, width: 200 }}>
-    <div
-      style={{ width: 130, height: 20, float: 'left', background: 'red' }}
-    ></div>
+    <div style={{ width: 130, height: 20, float: 'left', background: 'red' }}></div>
     <div style={{ background: 'rgba(0,0,0,.3)' }}>
       很早就听说过这句话了：一件事情，如果你坚持22天以上，就变成了习惯。
     </div>
@@ -82,12 +89,8 @@ export default () => (
 import React from 'react';
 export default () => (
   <div style={{ border: `solid blue`, width: 200, overflow: 'hidden' }}>
-    <div
-      style={{ width: 130, height: 20, float: 'left', background: 'red' }}
-    ></div>
-    <div style={{ overflow: 'hidden', background: 'rgba(0,0,0,.3)' }}>
-      利用“BFC 内的浮动元素不会与其他元素重叠”
-    </div>
+    <div style={{ width: 130, height: 20, float: 'left', background: 'red' }}></div>
+    <div style={{ overflow: 'hidden', background: 'rgba(0,0,0,.3)' }}>利用“BFC 内的浮动元素不会与其他元素重叠”</div>
   </div>
 );
 ```
@@ -98,15 +101,9 @@ export default () => (
 import React from 'react';
 export default () => (
   <div style={{ border: `solid blue`, width: 200, overflow: 'hidden' }}>
-    <div
-      style={{ width: 130, height: 20, margin: 20, background: '#ccc' }}
-    ></div>
-    <div
-      style={{ width: 130, height: 20, margin: 20, background: '#ccc' }}
-    ></div>
-    <div
-      style={{ width: 130, height: 20, margin: 20, background: '#ccc' }}
-    ></div>
+    <div style={{ width: 130, height: 20, margin: 20, background: '#ccc' }}></div>
+    <div style={{ width: 130, height: 20, margin: 20, background: '#ccc' }}></div>
+    <div style={{ width: 130, height: 20, margin: 20, background: '#ccc' }}></div>
   </div>
 );
 ```

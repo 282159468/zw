@@ -94,7 +94,7 @@ A 33.33 - 8.66/3 \* 2 = 27.55
 
 ## 属性 flex
 
-> flex: none | auto | [ <'flex-grow'> <'flex-shrink'>? || <'flex-basis'> ]
+> flex: `none | auto | [ <'flex-grow'> <'flex-shrink'>? || <'flex-basis'> ]`
 
 flex: flex-grow flex-shrink flex-basis
 

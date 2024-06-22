@@ -48,10 +48,7 @@ export type Fiber = {|
   /** 兄弟Fiber */
   sibling: Fiber | null,
 
-  ref:
-    | null
-    | (((handle: mixed) => void) & { _stringRef: ?string, ... })
-    | RefObject,
+  ref: null | (((handle: mixed) => void) & { _stringRef: ?string, ... }) | RefObject,
   /** 即将更新的props */
   pendingProps: any,
   /** 当前的props */
@@ -110,7 +107,7 @@ const Foo = () => {
 
 对应的 Fiber 树，Fragment 和 i 标签并没有创建 Fiber 节点
 
-<img src="/images/fiber树.jpg">
+<img src="/images/fiber树.jpg" />
 
 ### effectTag
 
@@ -128,7 +125,7 @@ const Foo = () => {
 
 RootFiber 是 Fiber 树的根节点，FiberRoot 是 RootFiber 的实例，所以 FiberRoot 不是 Fiber 节点
 
-<img src="/images/fiberRoot-rootFiber.png">
+<img src="/images/fiberRoot-rootFiber.png"/>
 
 ## 更新容器
 

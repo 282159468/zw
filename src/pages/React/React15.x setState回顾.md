@@ -21,7 +21,7 @@ class App extends PureComponent {
 }
 ```
 
-onClick 中的 this.setState({ a: this.state.a + 1 });执行后，常规理解这时输出 state 中 a 的值应该就是 2 了，但实际输出的还是 1。为什么会出现这种情况，肯定就是 setState 把数据保存下来了，因为 React 出于性能考虑，多于同一个任务中执行多次 setState，最终全合并为一次对界面进行刷新
+onClick 中的`this.setState({ a: this.state.a + 1 })`;执行后，常规理解这时输出 state 中 a 的值应该就是 2 了，但实际输出的还是 1。为什么会出现这种情况，肯定就是 setState 把数据保存下来了，因为 React 出于性能考虑，多于同一个任务中执行多次 setState，最终全合并为一次对界面进行刷新
 
 执行 setState 后最终会进入
 
@@ -87,8 +87,10 @@ var ReactDefaultBatchingStrategy = {
 };
 ```
 
+```
 有了以上两步经过合成事件最终触发了 onClick 处理函数，再执行 setState({})，然后进入 enqueueUpdate 这里判断 isBatchingUpdates 就为 true，把 setState({a:this.state.a+1})=>setState({a:2})的数据简单的添加到
 dirtyComponents.push(component)，component.\_pendingStateQueue = [{a:2}]，所以这里输出 state.a 的值还是之前的值
+```
 
 ## 什么时候更新了 state 数据
 

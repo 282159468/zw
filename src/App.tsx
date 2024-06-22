@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
-import { Menu, GetProps } from 'antd';
+import { ConfigProvider, App as AntdApp, Menu, GetProps } from 'antd';
 import { PlaygroundSandbox } from 'react-exercise-playground';
 import { MDXProvider } from '@mdx-js/react';
 import { RouterProvider, createBrowserRouter } from 'react-router-dom';
+import zhCN from 'antd/locale/zh_CN';
+
 import { routers } from './routers';
 import { CODE_PREVIEW_COMPONENT_NAME, CODE_VALUE_PROP } from '../config/codePlugin';
-import   './style/index.css'
+import './style/index.css';
 const router = createBrowserRouter(routers);
 
 const components = {
@@ -46,16 +48,20 @@ const generateMenus = (data): GetProps<typeof Menu>['items'] => {
 const menus = generateMenus(routers[0].children);
 const App: React.FC = () => {
   return (
-    <MDXProvider components={components}>
-      <Menu
-        mode="horizontal"
-        items={menus}
-        onClick={(info) => {
-          router.navigate(info.key);
-        }}
-      />
-      <RouterProvider router={router} />
-    </MDXProvider>
+    <ConfigProvider locale={zhCN}>
+      <AntdApp>
+        <MDXProvider components={components}>
+          <Menu
+            mode="horizontal"
+            items={menus}
+            onClick={(info) => {
+              router.navigate(info.key);
+            }}
+          />
+          <RouterProvider router={router} />
+        </MDXProvider>
+      </AntdApp>
+    </ConfigProvider>
   );
 };
 

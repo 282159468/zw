@@ -2,7 +2,7 @@
 title: React setState更新过程
 ---
 
-## this.setState({i:1})
+## `this.setState({i:1})`
 
 setState 更新的入口很简单就是调用组件上的 updater.enqueueSetState 方法
 
@@ -59,7 +59,7 @@ const classComponentUpdater = {
 
 ## createUpdate
 
-创建这个更新对象 update，update.payload={i:1}
+创建这个更新对象 update，`update.payload={i:1}`
 
 ```js
 // 函数组件更新队列

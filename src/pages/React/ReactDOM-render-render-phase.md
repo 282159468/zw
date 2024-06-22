@@ -12,7 +12,7 @@ src\packages\react-dom\src\client\ReactDOM.js
 
 丑的掉渣的流程图
 
-<img src="/images/react-dom-first-render-diagram.png">
+<img src="/images/react-dom-first-render-diagram.png"/>
 
 ReactDOM 提供下面接口
 
@@ -412,7 +412,7 @@ export function initializeUpdateQueue<State>(fiber: Fiber): void {
 
 ## fiberRoot-rootFiber 关系
 
-<img src="/images/fiberRoot-rootFiber.png">
+<img src="/images/fiberRoot-rootFiber.png"/>
 
 fiberRoot.current = rootFiber
 
@@ -468,7 +468,7 @@ export const Block = 22;
 
 ## createRoot 大概调用栈
 
-<img src="/images/react-legacy-render调用栈.png">
+<img src="/images/react-legacy-render调用栈.png"/>
 
 <hr/>
 

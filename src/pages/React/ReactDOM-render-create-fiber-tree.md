@@ -131,7 +131,7 @@ const next = instance.render();
 ```
 
 1.  beginWork 创建 DivFiber
-2.  beginWork 创建 S1Fiber，S2Fiber，S3Fiber 三个 Fiber，Element 的 props 是{children:[]}
+2.  beginWork 创建 S1Fiber，S2Fiber，S3Fiber 三个 Fiber，Element 的 props 是`{children:[]}`
 
     DivFiber.child = S1Fiber
 

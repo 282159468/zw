@@ -360,7 +360,7 @@ Promise.all([p1, p2])
 
 allSettled 返回的 promise 决议状态是稳定的(settled)完成状态，不管传入迭代对象的 promise 成员决议是否为拒绝都不会影响返回的 promise 的完成状态
 
-对每个决议结果进行封装{status: 'fulfilled', value}或者{status: 'rejected', reason}
+对每个决议结果进行封装`{status: 'fulfilled', value}或者{status: 'rejected', reason}`
 
 ```js
 var thenable = {

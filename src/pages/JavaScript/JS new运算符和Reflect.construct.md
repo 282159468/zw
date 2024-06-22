@@ -37,7 +37,7 @@ var inst a = new Fn()
 ### 理解执行过程
 
     1. 创建一个实例对象 temp = {}，且temp.constructor = Fn
-    2. Fn.call(temp), temp={name:zw}
+    2. `Fn.call(temp), temp={name:zw}`
     3. temp[[Prototype]]指向Fn.prototype
     3. Fn没有返回对象，最终返回实例对象
 

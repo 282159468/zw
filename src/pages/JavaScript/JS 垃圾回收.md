@@ -164,7 +164,7 @@ foo(function (data) {
 });
 ```
 
-第一个 console 输出`// 2,{a: {…}}`，点击{…}结果还是{a:null}，这里的效果跟 React@15 的事件处理函数中`对象池`有点像
+第一个输出`// 2,{a: {…}}`，第二个输出`{a:null}`，这里的效果跟 React@15 的事件处理函数中`对象池`有点像
 
 ```jsx
 import React from 'react';

@@ -34,9 +34,8 @@
 
 输出
 
-<img src="/images/innerText_textContent.jpg">
+<img src="/images/innerText_textContent.jpg" />
 
-<!-- TODO -->
 
 - [ ] textContent 返回结果注释内容那行显示为空行，并没有显示注释原生内容，需要在其他浏览器测试看下
 

@@ -5,7 +5,7 @@
   "type": "module",
   "description": "",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --force",
     "build": "vite build",
     "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview"
@@ -28,6 +28,7 @@
     "hast-util-is-element": "^3.0.0",
     "hast-util-to-string": "^3.0.0",
     "highlight.js": "^11.9.0",
+    "promises-aplus-tests": "^2.1.2",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-exercise-playground": "^0.1.93",

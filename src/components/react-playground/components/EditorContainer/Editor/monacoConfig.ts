@@ -1,4 +1,4 @@
-import { editor } from 'monaco-editor'
+import { editor } from 'monaco-editor';
 
 export const MonacoEditorConfig: editor.IStandaloneEditorConstructionOptions = {
   automaticLayout: true,
@@ -31,4 +31,4 @@ export const MonacoEditorConfig: editor.IStandaloneEditorConstructionOptions = {
     horizontalScrollbarSize: 6, // 横滚动条
   },
   // lineNumbers: 'off', // 隐藏控制行号
-}
+};

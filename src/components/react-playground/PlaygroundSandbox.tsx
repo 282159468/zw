@@ -1,3 +1,3 @@
-import { Sandbox } from './components/Sandbox'
+import { Sandbox } from './components/Sandbox';
 
-export const PlaygroundSandbox = Sandbox
+export const PlaygroundSandbox = Sandbox;

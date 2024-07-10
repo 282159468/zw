@@ -1,100 +1,91 @@
-import MonacoEditor from '@monaco-editor/react'
-import React, { useContext, useEffect, useRef, useState } from 'react'
+import MonacoEditor from '@monaco-editor/react';
+import React, { useContext, useEffect, useRef, useState } from 'react';
 
-import CompilerWorker from './compiler.worker.ts?worker&inline'
-import { Preview } from './Preview'
-import { ViewSelector } from './ViewSelector'
-import { MonacoEditorConfig } from '../EditorContainer/Editor/monacoConfig'
-import { PlaygroundContext } from '../../PlaygroundContext'
-import { IMPORT_MAP_FILE_NAME } from '../../files'
-import { IOutput, IPreviewData } from '../../types'
-import { debounce } from '../../utils'
+import CompilerWorker from './compiler.worker.ts?worker&inline';
+import { Preview } from './Preview';
+import { ViewSelector } from './ViewSelector';
+import { MonacoEditorConfig } from '../EditorContainer/Editor/monacoConfig';
+import { PlaygroundContext } from '../../PlaygroundContext';
+import { IMPORT_MAP_FILE_NAME } from '../../files';
+import { IOutput, IPreviewData } from '../../types';
+import { debounce } from '../../utils';
 
-
-const viewTypes = ['PREVIEW', 'JS']
+const viewTypes = ['PREVIEW', 'JS'];
 
 export const Output: React.FC<IOutput> = (props) => {
-  const { showCompileOutput = true } = props
-  const { files, theme, selectedFileName } = useContext(PlaygroundContext)
-  const [activedType, setActivedType] = useState('PREVIEW')
-  const compilerRef = useRef<Worker | null>(null)
-  const [compiledFiles, setCompiledFiles] = useState<IPreviewData>()
-  const [compiledCode, setCompiledCode] = useState('')
+  const { showCompileOutput = true } = props;
+  const { files, theme, selectedFileName } = useContext(PlaygroundContext);
+  const [activedType, setActivedType] = useState('PREVIEW');
+  const compilerRef = useRef<Worker | null>(null);
+  const [compiledFiles, setCompiledFiles] = useState<IPreviewData>();
+  const [compiledCode, setCompiledCode] = useState('');
 
   const handleViewChange = (type: string) => {
-    setActivedType(type)
-  }
+    setActivedType(type);
+  };
 
   const sendCompiledCode = debounce(() => {
-    if (activedType === 'PREVIEW') compilerRef.current?.postMessage(files)
+    if (activedType === 'PREVIEW') compilerRef.current?.postMessage(files);
     if (activedType === 'JS') {
-      compilerRef.current?.postMessage(files[selectedFileName].value)
+      compilerRef.current?.postMessage(files[selectedFileName].value);
     }
-  }, 50)
+  }, 50);
 
   useEffect(() => {
     if (!compilerRef.current) {
-      compilerRef.current = new CompilerWorker()
+      compilerRef.current = new CompilerWorker();
       compilerRef.current.addEventListener('message', ({ data }: { data: any }) => {
         if (data.type === 'UPDATE_FILES') {
           try {
-            JSON.parse(files[IMPORT_MAP_FILE_NAME].value)
-            data.data.importmap = files[IMPORT_MAP_FILE_NAME].value
+            JSON.parse(files[IMPORT_MAP_FILE_NAME].value);
+            data.data.importmap = files[IMPORT_MAP_FILE_NAME].value;
           } catch (error) {
-            console.error('importmap 解析错误:', error)
+            console.error('importmap 解析错误:', error);
           }
-          setCompiledFiles(data)
+          setCompiledFiles(data);
         } else if (data.type === 'UPDATE_FILE') {
-          setCompiledCode(data.data)
+          setCompiledCode(data.data);
         } else if (data.type === 'ERROR') {
-          console.log(data)
+          console.log(data);
         }
-      })
+      });
     }
-  }, [])
+  }, []);
 
   useEffect(() => {
-    sendCompiledCode()
-  }, [activedType, files])
+    sendCompiledCode();
+  }, [activedType, files]);
 
   useEffect(() => {
-    if (selectedFileName === IMPORT_MAP_FILE_NAME || activedType === 'PREVIEW') return
+    if (selectedFileName === IMPORT_MAP_FILE_NAME || activedType === 'PREVIEW') return;
     if (['javascript', 'typescript'].includes(files[selectedFileName]?.language)) {
-      compilerRef.current?.postMessage(files[selectedFileName]?.value)
+      compilerRef.current?.postMessage(files[selectedFileName]?.value);
     } else {
-      compilerRef.current?.postMessage('')
+      compilerRef.current?.postMessage('');
     }
-  }, [selectedFileName])
+  }, [selectedFileName]);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      <ViewSelector
-        items={viewTypes}
-        value={activedType}
-        onChange={handleViewChange}
-        hidden={!showCompileOutput}
-      />
+      <ViewSelector hidden={!showCompileOutput} items={viewTypes} onChange={handleViewChange} value={activedType} />
 
-      <Preview
-        iframeKey={files[IMPORT_MAP_FILE_NAME].value}
-        hidden={activedType !== 'PREVIEW'}
-        data={compiledFiles}
-      />
+      <Preview data={compiledFiles} hidden={activedType !== 'PREVIEW'} iframeKey={files[IMPORT_MAP_FILE_NAME].value} />
+
       {showCompileOutput ? (
         <div style={{ display: activedType !== 'JS' ? 'none' : '', height: '100%' }}>
           <MonacoEditor
-            className='react-playground-editor'
-            height='100%'
-            theme={`vs-${theme}`}
-            value={compiledCode}
-            language='javascript'
+            className="react-playground-editor"
+            height="100%"
+            language="javascript"
             options={{
               ...MonacoEditorConfig,
               readOnly: true,
             }}
+            theme={`vs-${theme}`}
+            value={compiledCode}
           />
         </div>
       ) : null}
     </div>
-  )
-}
+  );
+};
